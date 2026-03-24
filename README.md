@@ -52,6 +52,21 @@ A solution is successful if it clearly demonstrates how reliable cancer informat
 ## FAQ
 
 <details>
+<summary>Do we have to build a chatbot?</summary>
+Not per se, we encourage you to be creative!
+</details>
+
+<details>
+<summary>Do I need to use all data sources?</summary>
+No. Choose the ones that support your idea best. Creativity in using (or combining) sources is encouraged!
+</details>
+
+<details>
+<summary>What is the target audience?</summary>
+IKNL serves a wide range of target groups with very different needs: political and regulatory stakeholders (VWS, RIVM, ZiNL), the general public, patients and their loved ones, healthcare professionals, and partner/umbrella organizations such as hospitals and insurers. A solution that works well for patients may not fit the needs of policymakers or professionals, and vice versa. Teams may decide for which target group they design, or how one concept could support multiple groups.
+</details>
+
+<details>
 <summary>What counts as an eligible submission?</summary>
 Any idea or prototype that aims to make cancer information more accessible, better connected, or easier to navigate using AI and the provided data sources.
 </details>
@@ -61,10 +76,6 @@ Any idea or prototype that aims to make cancer information more accessible, bett
 Fork this repository, add your team folder under `teams/<your_team>/`, and submit your files via a Pull Request. See the [Detailed Submission Guide](./docs/submission-guide.md) for step-by-step instructions.
 </details>
 
-<details>
-<summary>Do I need to use all data sources?</summary>
-No. Choose the ones that support your idea best. Creativity in using (or combining) sources is encouraged!
-</details>
 
 <details>
 <summary>Who do I contact for help?</summary>
@@ -73,17 +84,10 @@ For questions or support, create an Issue in this repository or get in touch wit
 
 <details>
 <summary>What happens to my submission after the hackathon?</summary>
-...
+Every submission is carefully reviewed by the IKNL Data Science team - your idea may be selected for a follow-up project and make real impact for cancer care.
 </details>
 
-<details>
-<summary>Do we have to build a chatbot?</summary>
-No.
-</details>
 
-<details>
-<summary>What is the target audience?</summary>
-IKNL serves a wide range of target groups with very different needs: political and regulatory stakeholders (VWS, RIVM, ZiNL), the general public, patients and their loved ones, healthcare professionals, and partner/umbrella organizations such as hospitals and insurers. A solution that works well for patients may not fit the needs of policymakers or professionals, and vice versa. Teams may decide for which target group they design, or how one concept could support multiple groups.
-</details>
+
 
 
