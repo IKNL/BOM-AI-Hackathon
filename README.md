@@ -38,7 +38,7 @@ For full step-by-step instructions, see [Detailed Submission Guide](./docs/submi
 |IKNL reports|Extensive analyses and big reports|[More info](./sources/iknl-report.md)|
 |`kankeratlas.iknl.nl`|Regional variation, incidence, and survival|[More info](./sources/kankeratlas.iknl.nl)|
 |`richtlijnendatabase.nl`|Oncology guidelines|[More info](./sources/richtlijnendatabase.nl.md)|
-|Scientific publications IKNL|Publicaties van onze onderzoekers (https://iknl.nl/onderzoek/publicaties)|[More info](./sources/publicaties.md)|
+|Scientific publications IKNL|Publicaties van onze onderzoekers|[List of publications](https://iknl.nl/onderzoek/publicaties)|
 
 
 ## Success Criteria
