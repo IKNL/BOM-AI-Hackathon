@@ -12,7 +12,7 @@ The website provides:
 In short, [NKR Cijfers](https://nkr-cijfers.iknl.nl) offers direct insight into the core statistics of the Netherlands Cancer Registry, curated and published by IKNL for public access.
 
 ## How to use the API of NKR Cijfers?
-In addition to the interactive website, NKR Cijfers offers a public API that provides programmatic access to the same aggregated statistics displayed on nkr‑cijfers.nl
+In addition to the interactive website, NKR Cijfers offers a public API that provides programmatic access to the same aggregated statistics displayed on [NKR Cijfers](https://nkr-cijfers.iknl.nl).
 
 
 General usage pattern:
