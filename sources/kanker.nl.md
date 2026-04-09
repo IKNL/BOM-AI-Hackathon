@@ -77,7 +77,6 @@ def path_belongs_to_kankersoort(url, kankersoort):
     parsed = urlparse(url)
     return parsed.path.startswith(f"/kankersoorten/{kankersoort}")
 
-
 for kankersoort in kankersoorten_set:
     print(f"\n=== Crawling kankersoort: {kankersoort} ===")
 
