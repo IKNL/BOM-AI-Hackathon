@@ -6,3 +6,7 @@ node_modules/
 data/chromadb/
 data/feedback.db
 .next/
+.venv/
+*.egg-info/
+teams/*/backend/data/
+teams/data/
