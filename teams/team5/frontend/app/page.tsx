@@ -114,7 +114,7 @@ export default function ChatPage() {
       ...prev,
       ai_bekendheid: value as AiBekendheid,
     }));
-    addBotMessage("**Waaronder valt u?**");
+    addBotMessage("**Wat is uw rol?**");
     setIntakeState("GEBRUIKER_TYPE");
   };
 
@@ -254,7 +254,7 @@ export default function ChatPage() {
       handleSearch();
     } else {
       addUserMessage("Nee, ik wil iets aanpassen");
-      addBotMessage("Geen probleem. **Waaronder valt u?**");
+      addBotMessage("Geen probleem. **Wat is uw rol?**");
       setGegevens((prev) => ({
         ...prev,
         vraag_tekst: null,
