@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from models import ChatRequest, ChartData, FeedbackEntry, SourceResult, Citation
+from models import GegevensModel, IntakeSummarizeRequest, IntakeSummarizeResponse, IntakeSearchRequest
 
 
 class TestChatRequest:
@@ -121,4 +122,101 @@ class TestChartData:
                 data=[],
                 x_key="x",
                 y_key="y",
+            )
+
+
+class TestGegevensModel:
+    def test_defaults(self):
+        gm = GegevensModel()
+        assert gm.ai_bekendheid is None
+        assert gm.gebruiker_type is None
+        assert gm.vraag_tekst is None
+        assert gm.kankersoort is None
+        assert gm.vraag_type is None
+        assert gm.samenvatting is None
+        assert gm.bevestigd is False
+
+    def test_valid_ai_bekendheid(self):
+        gm = GegevensModel(ai_bekendheid="niet_bekend")
+        assert gm.ai_bekendheid == "niet_bekend"
+
+    def test_invalid_ai_bekendheid_rejected(self):
+        with pytest.raises(ValidationError):
+            GegevensModel(ai_bekendheid="very_known")
+
+    def test_valid_gebruiker_type(self):
+        gm = GegevensModel(gebruiker_type="patient")
+        assert gm.gebruiker_type == "patient"
+
+    def test_invalid_gebruiker_type_rejected(self):
+        with pytest.raises(ValidationError):
+            GegevensModel(gebruiker_type="hacker")
+
+    def test_full_model(self):
+        gm = GegevensModel(
+            ai_bekendheid="enigszins",
+            gebruiker_type="zorgverlener",
+            vraag_tekst="Hoe vaak komt longkanker voor?",
+            kankersoort="longkanker",
+            vraag_type="cijfers",
+            samenvatting="U zoekt cijfers over longkanker.",
+            bevestigd=True,
+        )
+        assert gm.bevestigd is True
+        assert gm.kankersoort == "longkanker"
+
+
+class TestIntakeSummarizeRequest:
+    def test_valid(self):
+        req = IntakeSummarizeRequest(
+            gebruiker_type="patient",
+            vraag_tekst="Wat is borstkanker?",
+        )
+        assert req.gebruiker_type == "patient"
+        assert req.vraag_tekst == "Wat is borstkanker?"
+
+    def test_invalid_gebruiker_type(self):
+        with pytest.raises(ValidationError):
+            IntakeSummarizeRequest(
+                gebruiker_type="alien",
+                vraag_tekst="test",
+            )
+
+
+class TestIntakeSummarizeResponse:
+    def test_valid(self):
+        resp = IntakeSummarizeResponse(
+            samenvatting="U zoekt info over borstkanker.",
+            kankersoort="borstkanker",
+            vraag_type="patient_info",
+        )
+        assert resp.kankersoort == "borstkanker"
+
+    def test_geen_kankersoort(self):
+        resp = IntakeSummarizeResponse(
+            samenvatting="U zoekt algemene info.",
+            kankersoort="geen",
+            vraag_type="breed",
+        )
+        assert resp.kankersoort == "geen"
+
+
+class TestIntakeSearchRequest:
+    def test_valid(self):
+        req = IntakeSearchRequest(
+            ai_bekendheid="erg_bekend",
+            gebruiker_type="onderzoeker",
+            vraag_tekst="Overleving darmkanker",
+            kankersoort="darmkanker",
+            vraag_type="cijfers",
+            samenvatting="U zoekt overlevingscijfers voor darmkanker.",
+        )
+        assert req.gebruiker_type == "onderzoeker"
+
+    def test_requires_gebruiker_type(self):
+        with pytest.raises(ValidationError):
+            IntakeSearchRequest(
+                ai_bekendheid="enigszins",
+                vraag_tekst="test",
+                samenvatting="test",
             )

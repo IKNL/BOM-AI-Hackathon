@@ -69,3 +69,46 @@ class SessionContext(BaseModel):
     profile: Literal["patient", "professional", "policymaker"]
     history: list[ChatMessage]
     inferred_intent: Optional[str] = None
+
+
+class GegevensModel(BaseModel):
+    """Intake data model — drives the structured intake flow."""
+    ai_bekendheid: Literal["niet_bekend", "enigszins", "erg_bekend"] | None = None
+    gebruiker_type: Literal[
+        "patient", "publiek", "zorgverlener", "student",
+        "beleidsmaker", "onderzoeker", "journalist", "anders"
+    ] | None = None
+    vraag_tekst: str | None = None
+    kankersoort: str | None = None
+    vraag_type: str | None = None
+    samenvatting: str | None = None
+    bevestigd: bool = False
+
+
+class IntakeSummarizeRequest(BaseModel):
+    """Request body for /api/intake/summarize."""
+    gebruiker_type: Literal[
+        "patient", "publiek", "zorgverlener", "student",
+        "beleidsmaker", "onderzoeker", "journalist", "anders"
+    ]
+    vraag_tekst: str
+
+
+class IntakeSummarizeResponse(BaseModel):
+    """Response from /api/intake/summarize."""
+    samenvatting: str
+    kankersoort: str  # "geen" if not mentioned
+    vraag_type: str   # patient_info | cijfers | regionaal | onderzoek | breed
+
+
+class IntakeSearchRequest(BaseModel):
+    """Request body for /api/intake/search."""
+    ai_bekendheid: Literal["niet_bekend", "enigszins", "erg_bekend"]
+    gebruiker_type: Literal[
+        "patient", "publiek", "zorgverlener", "student",
+        "beleidsmaker", "onderzoeker", "journalist", "anders"
+    ]
+    vraag_tekst: str
+    kankersoort: str | None = None
+    vraag_type: str | None = None
+    samenvatting: str
