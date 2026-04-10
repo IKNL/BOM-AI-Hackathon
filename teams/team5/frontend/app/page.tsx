@@ -273,9 +273,11 @@ export default function ChatPage() {
   };
 
   const handleNewTopic = () => {
-    addBotMessage(
-      "Prima, laten we een nieuw onderwerp bespreken.\n\n**Wat is uw vraag?**"
-    );
+    const prompt =
+      gegevens.ai_bekendheid === "niet_bekend"
+        ? "**Schrijf in één zin duidelijk uw vraag op.**"
+        : "**Wat is uw vraag?**";
+    addBotMessage(`Prima, laten we een nieuw onderwerp bespreken.\n\n${prompt}`);
     setGegevens((prev) => ({
       ...prev,
       vraag_tekst: null,
@@ -503,7 +505,6 @@ export default function ChatPage() {
             {intakeState === "RESULTS" && !isLoading && (
               <div className="ml-10">
                 <ResultsList
-                  content=""
                   onMoreInfo={handleMoreInfo}
                   onNewTopic={handleNewTopic}
                 />

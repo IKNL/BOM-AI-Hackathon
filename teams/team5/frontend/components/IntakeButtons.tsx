@@ -26,6 +26,7 @@ export default function IntakeButtons({
     >
       {options.map((option) => (
         <button
+          type="button"
           key={option.value}
           onClick={() => onSelect(option.value)}
           className="px-4 py-3 text-left text-sm font-medium rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-teal-50 hover:border-teal-300 hover:text-teal-800 transition-colors"

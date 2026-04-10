@@ -160,6 +160,16 @@ async def lifespan(app: FastAPI):
 
     # Initialize connectors (graceful -- missing connectors are logged, not fatal)
     _connectors = _init_connectors()
+
+    # Call initialize() on connectors that need async setup (NKR, CancerAtlas)
+    for c in _connectors:
+        if hasattr(c, "initialize"):
+            try:
+                await c.initialize()
+                logger.info("Initialized connector: %s", getattr(c, "name", type(c).__name__))
+            except Exception as exc:
+                logger.warning("Could not initialize %s: %s", getattr(c, "name", type(c).__name__), exc)
+
     connector_names = [
         getattr(c, "name", type(c).__name__) for c in _connectors
     ]

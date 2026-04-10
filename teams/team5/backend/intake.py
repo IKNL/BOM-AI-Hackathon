@@ -55,13 +55,20 @@ async def summarize_question(
         vraag_tekst=vraag_tekst,
     )
 
-    response = await litellm.acompletion(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2,
-    )
-
-    raw = response.choices[0].message.content or ""
+    try:
+        response = await litellm.acompletion(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2,
+        )
+        raw = response.choices[0].message.content or ""
+    except Exception as exc:
+        logger.exception("LLM summarize call failed")
+        return IntakeSummarizeResponse(
+            samenvatting=vraag_tekst,
+            kankersoort="geen",
+            vraag_type="breed",
+        )
 
     try:
         parsed = json.loads(raw)
@@ -162,15 +169,20 @@ async def search_and_format(
         sources_tried.append(connector_name)
 
         try:
-            query_params: dict[str, Any] = {"query": vraag_tekst}
+            query_params: dict[str, Any] = {}
+            if connector_name in ("kanker_nl", "publications"):
+                query_params["query"] = vraag_tekst
             if kanker_filter:
                 if connector_name == "kanker_nl":
                     query_params["kankersoort"] = kanker_filter
                 elif connector_name in ("nkr_cijfers", "cancer_atlas"):
                     query_params["cancer_type"] = kanker_filter
+            if connector_name == "nkr_cijfers":
+                query_params.setdefault("cancer_type", vraag_tekst)
+                query_params["period"] = "2018-2022"
 
             result = await connector.query(**query_params)
-            contributed = result.data is not None and result.data != {}
+            contributed = bool(result.data)
 
             if result.sources:
                 for source in result.sources:
@@ -225,15 +237,18 @@ async def search_and_format(
     else:
         bronnen_tekst = "Geen relevante bronnen gevonden."
 
-    guidance = _GUIDANCE_LEVEL.get(ai_bekendheid, _GUIDANCE_LEVEL["enigszins"])
-    format_prompt = _FORMAT_PROMPT_TEMPLATE.format(
-        gebruiker_type=gebruiker_type,
-        samenvatting=samenvatting,
-        ai_bekendheid=guidance,
-        bronnen_tekst=bronnen_tekst,
-    )
-
     try:
+        # Sanitize braces in dynamic content to prevent .format() crashes
+        safe_bronnen = bronnen_tekst.replace("{", "{{").replace("}", "}}")
+        safe_samenvatting = samenvatting.replace("{", "{{").replace("}", "}}")
+        guidance = _GUIDANCE_LEVEL.get(ai_bekendheid, _GUIDANCE_LEVEL["enigszins"])
+        format_prompt = _FORMAT_PROMPT_TEMPLATE.format(
+            gebruiker_type=gebruiker_type,
+            samenvatting=safe_samenvatting,
+            ai_bekendheid=guidance,
+            bronnen_tekst=safe_bronnen,
+        )
+
         response = await litellm.acompletion(
             model=model,
             messages=[{"role": "user", "content": format_prompt}],
