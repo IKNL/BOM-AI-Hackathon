@@ -26,7 +26,7 @@ RELIABILITY_MAP = {
 # Known publication URLs — maps title to real URL
 PUBLICATION_URLS = {
     "Uitgezaaide kanker 2025": "https://iknl.nl/uitgezaaide-kanker-2025",
-    "Man-vrouwverschillen bij kanker": "https://iknl.nl/man-vrouwverschillen-bij-kanker",
+    "Man-vrouwverschillen bij kanker": "https://iknl.nl/vrouw-man-verschillen-bij-kanker",
     "Trendrapport darmkanker": "https://iknl.nl/trendrapport-darmkanker",
     "Comorbidities and survival in 8 cancers": "https://doi.org/10.1016/S1470-2045(22)00734-X",
     "Head and neck cancers survival in Europe, Taiwan and Japan": "https://doi.org/10.1016/S1470-2045(23)00588-X",
