@@ -23,6 +23,18 @@ RELIABILITY_MAP = {
     "report": "official",
 }
 
+# Known publication URLs — maps title to real URL
+PUBLICATION_URLS = {
+    "Uitgezaaide kanker 2025": "https://iknl.nl/uitgezaaide-kanker-2025",
+    "Man-vrouwverschillen bij kanker": "https://iknl.nl/man-vrouwverschillen-bij-kanker",
+    "Trendrapport darmkanker": "https://iknl.nl/trendrapport-darmkanker",
+    "Comorbidities and survival in 8 cancers": "https://doi.org/10.1016/S1470-2045(22)00734-X",
+    "Head and neck cancers survival in Europe, Taiwan and Japan": "https://doi.org/10.1016/S1470-2045(23)00588-X",
+    "Ovarian cancer recurrence prediction": "https://doi.org/10.1016/j.ygyno.2023.01.029",
+    "Trends in treatment of stage I-III NSCLC": "https://doi.org/10.1016/j.lungcan.2023.107356",
+    "Trends in treatment of stage I-III SCLC": "https://doi.org/10.1016/j.lungcan.2023.107281",
+}
+
 
 class PublicationsConnector(SourceConnector):
     """Vector search connector for indexed publications and reports."""
@@ -103,15 +115,20 @@ async def search_publications(
                 visualizable=False,
             )
 
-        # Build citations from document metadata
+        # Build citations from document metadata with real URLs
         citations: list[Citation] = []
+        seen_titles: set[str] = set()
         for meta in metadatas:
             title = meta.get("title", "Onbekend document")
+            if title in seen_titles:
+                continue
+            seen_titles.add(title)
             src_type = meta.get("source_type", "publication")
             reliability = RELIABILITY_MAP.get(src_type, "peer-reviewed")
+            url = PUBLICATION_URLS.get(title, f"https://iknl.nl/publicaties")
             citations.append(
                 Citation(
-                    url=f"publications/{title.lower().replace(' ', '-')}",
+                    url=url,
                     title=title,
                     reliability=reliability,
                 )
