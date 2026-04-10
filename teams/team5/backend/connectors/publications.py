@@ -11,6 +11,7 @@ import logging
 import chromadb
 
 from connectors.base import Citation, SourceConnector, SourceResult
+from paths import resolve_repo_path
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class PublicationsConnector(SourceConnector):
 
     def __init__(self, chromadb_path: str = "data/chromadb") -> None:
         from connectors.embeddings import get_embedding_function
-        client = chromadb.PersistentClient(path=chromadb_path)
+        client = chromadb.PersistentClient(path=resolve_repo_path(chromadb_path))
         self._collection = client.get_collection(name=COLLECTION_NAME, embedding_function=get_embedding_function())
         logger.info(
             "PublicationsConnector initialised with collection '%s' (%d documents)",
