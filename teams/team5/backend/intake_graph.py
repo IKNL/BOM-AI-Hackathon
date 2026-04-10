@@ -83,7 +83,10 @@ Analyseer de vraag:
 
 Als de vraag DUIDELIJK genoeg is om mee te zoeken:
 - Vul alle velden in
-- Schrijf een bevestigingsvraag als bot_message: "Als ik het goed begrijp bent u een [rol] en zoekt u informatie over [samenvatting]. Klopt dit?"
+- Schrijf een bot_message die ALTIJD eindigt met een ja/nee-vraag, bijvoorbeeld:
+  "Als ik het goed begrijp zoekt u informatie over [samenvatting]. Klopt dit?"
+  of: "Ik denk dat u dit zoekt: [samenvatting]. Zal ik hiernaar zoeken?"
+  De LAATSTE zin moet ALTIJD een vraag zijn die met ja of nee beantwoord kan worden.
 
 Als de vraag ONDUIDELIJK is of te vaag:
 - Vraag door met voorbeelden
