@@ -1,7 +1,7 @@
 import type { IntakeSummarizeResponse, IntakeAnalyzeResponse, GegevensModel, SSEEvent } from "./types";
 import { logger } from "./logger";
 
-const API_BASE = "";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 
 export async function analyzeMessage(

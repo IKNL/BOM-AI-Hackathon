@@ -2,7 +2,7 @@
 
 import { ChatRequest, SSEEvent } from "./types";
 
-const API_BASE = "";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 function parseSSELine(line: string): { event?: string; data?: string } | null {
   if (line.startsWith("event:")) {
