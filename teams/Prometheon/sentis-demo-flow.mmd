@@ -1,0 +1,38 @@
+flowchart TD
+    login["1. Dr. Henk logs in<br/>Emma de Vries is already loaded"]
+    prep["2. Sentis enters clinician mode<br/>meeting and consultation preparation"]
+    q1["3. Ask: What is Emma's diagnosis so far?"]
+    a1["4. Retrieve doctor-only patient context<br/>return a clinician-ready summary with provenance"]
+    q2["5. Ask: How often did our hospital perform<br/>lumpectomy vs mastectomy in the last 5 years,<br/>and what were the outcomes?"]
+    a2["6. Retrieve local hospital and registry context<br/>allowed for the Radboud clinician"]
+    optional["7. If a needed source is restricted,<br/>Sentis shows the boundary and offers Request Access"]
+    q3["8. Ask: What is the typical survival rate<br/>for patients with this breast cancer?"]
+    a3["9. Switch to trusted IKNL collections only<br/>return grounded population-level context"]
+    consult["10. Dr. Henk enters the consultation prepared"]
+    later["11. Later at home, Emma opens Sentis on her phone"]
+    q4["12. Emma asks follow-up questions in patient mode"]
+    a4["13. Sentis answers with patient-friendly language,<br/>visible provenance, and safe boundaries"]
+    feedback["14. Emma can leave feedback or flag missing information"]
+
+    patientData["Hospital patient dossier<br/>Emma-specific confidential data"]
+    localData["Local hospital and registry slice<br/>procedure mix and outcome context"]
+    iknlData["Public IKNL knowledge<br/>guidance and population statistics"]
+
+    login --> prep --> q1 --> a1 --> q2 --> a2 --> q3 --> a3 --> consult --> later --> q4 --> a4 --> feedback
+
+    patientData --> a1
+    localData --> a2
+    iknlData --> a3
+    iknlData --> a4
+
+    a2 -. if a cross-institution detail is restricted .-> optional
+    optional -. continue with approved or public context .-> q3
+
+    classDef main fill:#EEF2FF,stroke:#4F46E5,stroke-width:1px,color:#111827;
+    classDef data fill:#ECFDF5,stroke:#047857,stroke-width:1px,color:#111827;
+    classDef action fill:#FFF7ED,stroke:#C2410C,stroke-width:1px,color:#111827;
+    classDef result fill:#F5F3FF,stroke:#7C3AED,stroke-width:1px,color:#111827;
+
+    class login,prep,q1,q2,q3,q4 action;
+    class a1,a2,a3,a4,consult,later,feedback,optional result;
+    class patientData,localData,iknlData data;

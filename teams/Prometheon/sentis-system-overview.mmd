@@ -1,0 +1,61 @@
+flowchart LR
+    question["Natural-language question"]
+    onprem["Sovereign on-prem deployment<br/>data stays with the owner"]
+
+    subgraph personas["Users and explanation modes"]
+        patient["Patient / public<br/>patient-friendly mode"]
+        clinician["Clinician<br/>consultation preparation mode"]
+        researcher["Researcher / policymaker<br/>discovery and request mode"]
+    end
+
+    subgraph orchestration["Sentis orchestration layer"]
+        router["Intent, persona, and collection router"]
+        access["Role-aware and access-aware retrieval"]
+        hybrid["Hybrid search and grounded summarization<br/>semantic + keyword + metadata"]
+    end
+
+    subgraph sources["Trusted distributed cancer knowledge"]
+        hospital["Hospital collections<br/>records, notes, local outcomes"]
+        registry["Registry collections<br/>NKR and regional statistics"]
+        iknl["IKNL collections<br/>kanker.nl, guidelines, reports, publications"]
+    end
+
+    subgraph outcomes["User-facing outcomes"]
+        answer["Safe, grounded, non-speculative answer"]
+        provenance["Visible provenance for every answer<br/>sources, links, collection labels"]
+        modes["Patient-friendly and clinician-friendly explanations"]
+        prep["Meeting and consultation preparation intelligence"]
+        workflows["Feedback and access-request workflows<br/>for continuous improvement"]
+    end
+
+    patient --> question
+    clinician --> question
+    researcher --> question
+
+    question --> router --> access --> hybrid
+
+    hospital --> hybrid
+    registry --> hybrid
+    iknl --> hybrid
+
+    onprem -. governance and locality .-> access
+    onprem -. trusted data stays local .-> sources
+
+    hybrid --> answer
+    answer --> provenance
+    answer --> modes
+    answer --> prep
+    answer --> workflows
+    access -. restricted path .-> workflows
+
+    classDef persona fill:#EEF2FF,stroke:#4F46E5,stroke-width:1px,color:#111827;
+    classDef platform fill:#FFF7ED,stroke:#C2410C,stroke-width:1px,color:#111827;
+    classDef control fill:#E0F2FE,stroke:#0369A1,stroke-width:1px,color:#111827;
+    classDef data fill:#ECFDF5,stroke:#047857,stroke-width:1px,color:#111827;
+    classDef output fill:#F5F3FF,stroke:#7C3AED,stroke-width:1px,color:#111827;
+
+    class patient,clinician,researcher persona;
+    class onprem platform;
+    class router,access,hybrid control;
+    class hospital,registry,iknl data;
+    class answer,provenance,modes,prep,workflows output;
