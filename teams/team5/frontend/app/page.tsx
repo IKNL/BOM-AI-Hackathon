@@ -133,7 +133,7 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      const result = await analyzeMessage(msg, gegevens);
+      const result = await analyzeMessage(msg, gegevens, currentSessionId);
       setGegevens(result.gegevens);
       addBotMessage(result.bot_message);
 

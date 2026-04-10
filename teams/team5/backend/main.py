@@ -29,6 +29,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from models import ChatRequest, FeedbackEntry, IntakeSummarizeRequest, IntakeSearchRequest, IntakeAnalyzeRequest
 from intake import summarize_question, search_and_format, analyze_intake
+from session_store import save_session, get_session, list_sessions
 
 # ---------------------------------------------------------------------------
 # Centralized logging setup
@@ -442,6 +443,21 @@ async def intake_analyze(request: IntakeAnalyzeRequest):
             gegevens=request.gegevens,
             model=LLM_MODEL,
         )
+
+        # Persist session if session_id provided
+        if request.session_id:
+            try:
+                await save_session(
+                    session_id=request.session_id,
+                    gegevens=result.gegevens,
+                    messages=[
+                        {"role": "user", "content": request.message},
+                        {"role": "assistant", "content": result.bot_message},
+                    ],
+                )
+            except Exception:
+                logger.warning("Failed to persist session %s", request.session_id)
+
         return result.model_dump()
     except Exception:
         logger.exception("intake_analyze failed for message=%s", request.message[:100])
@@ -449,6 +465,27 @@ async def intake_analyze(request: IntakeAnalyzeRequest):
             status_code=502,
             content={"error": "analyze_failed", "message": "Kon het bericht niet verwerken."},
         )
+
+
+# ---------------------------------------------------------------------------
+# Admin endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/admin/sessions")
+async def admin_list_sessions(limit: int = 50):
+    """List recent sessions with gegevensmodel data."""
+    sessions = await list_sessions(limit=limit)
+    return {"sessions": sessions}
+
+
+@app.get("/api/admin/sessions/{session_id}")
+async def admin_get_session(session_id: str):
+    """Get full session with conversation history."""
+    session = await get_session(session_id)
+    if not session:
+        return JSONResponse(status_code=404, content={"error": "Session not found"})
+    return session
 
 
 @app.post("/api/intake/summarize")

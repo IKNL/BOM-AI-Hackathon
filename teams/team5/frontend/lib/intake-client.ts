@@ -6,14 +6,15 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 export async function analyzeMessage(
   message: string,
-  gegevens: GegevensModel
+  gegevens: GegevensModel,
+  sessionId?: string
 ): Promise<IntakeAnalyzeResponse> {
   let response: Response;
   try {
     response = await fetch(`${API_BASE}/api/intake/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, gegevens }),
+      body: JSON.stringify({ message, gegevens, session_id: sessionId }),
     });
   } catch (err) {
     logger.error("intake-client", "Network error calling /api/intake/analyze", err);

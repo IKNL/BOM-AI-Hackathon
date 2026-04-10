@@ -104,6 +104,7 @@ class IntakeSummarizeResponse(BaseModel):
 class IntakeAnalyzeRequest(BaseModel):
     """Request body for /api/intake/analyze — conversational intake."""
     message: str
+    session_id: str | None = None
     gegevens: GegevensModel = GegevensModel()
 
 
