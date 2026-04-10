@@ -156,8 +156,9 @@ export default function ChatPage() {
   const handleConfirm = async (confirmed: boolean) => {
     if (confirmed) {
       addUserMessage("Ja, dit klopt");
-      setGegevens((prev) => ({ ...prev, bevestigd: true }));
-      await doSearch(gegevens);
+      const confirmedGegevens = { ...gegevens, bevestigd: true };
+      setGegevens(confirmedGegevens);
+      await doSearch(confirmedGegevens);
     } else {
       addUserMessage("Nee, ik wil iets aanpassen");
       setGegevens((prev) => ({
