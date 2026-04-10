@@ -56,3 +56,41 @@ export interface FeedbackRequest {
   query: string;
   sources_tried: string[];
 }
+
+// Intake flow types
+
+export type AiBekendheid = "niet_bekend" | "enigszins" | "erg_bekend";
+
+export type GebruikerType =
+  | "patient"
+  | "publiek"
+  | "zorgverlener"
+  | "student"
+  | "beleidsmaker"
+  | "onderzoeker"
+  | "journalist"
+  | "anders";
+
+export type IntakeState =
+  | "INTAKE_START"
+  | "GEBRUIKER_TYPE"
+  | "VRAAG"
+  | "SAMENVATTING"
+  | "SEARCH"
+  | "RESULTS";
+
+export interface GegevensModel {
+  ai_bekendheid: AiBekendheid | null;
+  gebruiker_type: GebruikerType | null;
+  vraag_tekst: string | null;
+  kankersoort: string | null;
+  vraag_type: string | null;
+  samenvatting: string | null;
+  bevestigd: boolean;
+}
+
+export interface IntakeSummarizeResponse {
+  samenvatting: string;
+  kankersoort: string;
+  vraag_type: string;
+}

@@ -1,0 +1,98 @@
+import type { IntakeSummarizeResponse, SSEEvent } from "./types";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+function parseSSELine(line: string): { event?: string; data?: string } | null {
+  if (line.startsWith("event:")) return { event: line.slice(6).trim() };
+  if (line.startsWith("data:")) return { data: line.slice(5).trim() };
+  return null;
+}
+
+export async function summarizeQuestion(
+  gebruiker_type: string,
+  vraag_tekst: string
+): Promise<IntakeSummarizeResponse> {
+  const response = await fetch(`${API_BASE}/api/intake/summarize`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ gebruiker_type, vraag_tekst }),
+  });
+  if (!response.ok) {
+    throw new Error(`Summarize failed: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function* searchAndStream(request: {
+  ai_bekendheid: string;
+  gebruiker_type: string;
+  vraag_tekst: string;
+  kankersoort: string | null;
+  vraag_type: string | null;
+  samenvatting: string;
+}): AsyncGenerator<SSEEvent> {
+  const response = await fetch(`${API_BASE}/api/intake/search`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "text/event-stream",
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    yield {
+      event: "error",
+      data: {
+        code: `HTTP_${response.status}`,
+        message: `Server returned ${response.status}: ${response.statusText}`,
+      },
+    };
+    return;
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    yield { event: "error", data: { code: "NO_BODY", message: "Empty response" } };
+    return;
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let currentEvent = "token";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed === "") continue;
+
+        const parsed = parseSSELine(trimmed);
+        if (!parsed) continue;
+
+        if (parsed.event !== undefined) currentEvent = parsed.event;
+
+        if (parsed.data !== undefined) {
+          try {
+            const jsonData = JSON.parse(parsed.data);
+            yield { event: currentEvent as SSEEvent["event"], data: jsonData };
+            if (currentEvent === "done" || currentEvent === "error") return;
+          } catch {
+            if (currentEvent === "token") {
+              yield { event: "token", data: { text: parsed.data } };
+            }
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
