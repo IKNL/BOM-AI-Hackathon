@@ -58,12 +58,14 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 FEEDBACK_DB_PATH = os.environ.get("FEEDBACK_DB_PATH", "data/feedback.db")
-LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "anthropic")
-LLM_MODEL = os.environ.get(
-    "LLM_MODEL",
-    "anthropic/claude-sonnet-4-20250514",
-)
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "openrouter")
+LLM_MODEL = os.environ.get("LLM_MODEL", "openai/gpt-4o-mini")
 CHROMADB_PATH = os.environ.get("CHROMADB_PATH", "data/chromadb")
+
+# LiteLLM reads OPENROUTER_API_KEY from env automatically for openrouter models
+# Set the model prefix for LiteLLM: openrouter/openai/gpt-4o-mini
+if LLM_PROVIDER == "openrouter" and not LLM_MODEL.startswith("openrouter/"):
+    LLM_MODEL = f"openrouter/{LLM_MODEL}"
 VERSION = "0.1.0"
 
 # ---------------------------------------------------------------------------

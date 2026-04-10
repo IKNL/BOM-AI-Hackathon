@@ -9,12 +9,16 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # LLM
     ANTHROPIC_API_KEY: str = ""
-    LLM_PROVIDER: Literal["anthropic", "ollama"] = "anthropic"
-    LLM_MODEL: str = "claude-sonnet-4-20250514"
+    LLM_PROVIDER: Literal["anthropic", "ollama", "openrouter"] = "openrouter"
+    LLM_MODEL: str = "openai/gpt-4o-mini"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
 
+    # OpenRouter
+    OPENROUTER_API_KEY: str = ""
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+
     # Embeddings
-    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+    EMBEDDING_MODEL: str = "intfloat/multilingual-e5-small"
 
     # Ports
     BACKEND_PORT: int = 8001

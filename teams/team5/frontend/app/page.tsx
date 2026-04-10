@@ -51,13 +51,10 @@ export default function ChatPage() {
     useState<UserProfile>("patient");
   const [inputText, setInputText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [sessionId] = useState("pending");
-  // Set session ID only on client to avoid hydration mismatch
-  const sessionIdRef = useRef<string>("");
-  if (sessionIdRef.current === "" && typeof window !== "undefined") {
-    sessionIdRef.current = generateId();
-  }
-  const currentSessionId = sessionIdRef.current || sessionId;
+  const [currentSessionId, setCurrentSessionId] = useState("pending");
+  useEffect(() => {
+    setCurrentSessionId(generateId());
+  }, []);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
