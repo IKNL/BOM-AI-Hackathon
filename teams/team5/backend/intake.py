@@ -404,6 +404,7 @@ async def search_and_format(
             model=model,
             messages=[{"role": "user", "content": format_prompt}],
             temperature=0.3,
+            max_tokens=500,
         )
         final_text = response.choices[0].message.content or ""
     except Exception as exc:
