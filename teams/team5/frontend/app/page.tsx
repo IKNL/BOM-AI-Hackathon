@@ -289,7 +289,7 @@ export default function ChatPage() {
             </div>
             <div>
               <h1 className="text-sm font-semibold text-gray-900">IKNL Infobot</h1>
-              <p className="text-xs text-gray-500">Kankerinformatie assistent</p>
+              <p className="text-xs text-gray-500">Informatie assistent</p>
             </div>
           </div>
         </div>
