@@ -26,7 +26,28 @@ const INITIAL_GEGEVENS: GegevensModel = {
   bevestigd: false,
 };
 
-type FlowState = "CHAT" | "SEARCHING" | "RESULTS";
+const BEKENDHEID_OPTIONS = [
+  { value: "Niet bekend met AI", label: "Niet bekend" },
+  { value: "Enigszins bekend met AI", label: "Enigszins bekend" },
+  { value: "Erg bekend met AI", label: "Erg bekend" },
+];
+
+const ROL_OPTIONS = [
+  { value: "Ik ben patiënt of naaste", label: "Patiënt of naaste" },
+  { value: "Ik ben een zorgverlener", label: "Zorgverlener" },
+  { value: "Ik ben een onderzoeker", label: "Onderzoeker" },
+  { value: "Ik ben een beleidsmaker", label: "Beleidsmaker" },
+  { value: "Ik ben een student", label: "Student" },
+  { value: "Ik ben een journalist", label: "Journalist" },
+  { value: "Anders", label: "Anders" },
+];
+
+const BEVESTIGING_OPTIONS = [
+  { value: "Ja, dit klopt", label: "Ja, dit klopt" },
+  { value: "Nee, ik wil iets aanpassen", label: "Nee, aanpassen" },
+];
+
+type FlowState = "CHAT" | "CONFIRMING" | "SEARCHING" | "RESULTS";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
@@ -68,24 +89,41 @@ export default function ChatPage() {
   // Welcome message
   useEffect(() => {
     addBotMessage(
-      "Welkom bij de IKNL Infobot! Ik help u betrouwbare kankerinformatie te vinden uit vertrouwde bronnen.\n\n" +
+      "Welkom bij de IKNL Infobot! Ik help u informatie te vinden uit vertrouwde bronnen.\n\n" +
         "**Let op:** Dit is een prototype (BrabantHack_26). Dit is geen medisch hulpmiddel.\n\n" +
-        "Stel gerust uw vraag, of vertel me eerst wie u bent zodat ik de juiste bronnen kan raadplegen."
+        "**Hoe bekend bent u met het gebruik van een AI-chatbot?**"
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // --- Gegevensmodel sidebar display ---
+  // --- Determine which step we're on based on filled fields ---
+  const currentStep = (() => {
+    if (flowState === "CONFIRMING") return "BEVESTIGING";
+    if (flowState === "SEARCHING") return "SEARCHING";
+    if (flowState === "RESULTS") return "RESULTS";
+    if (!gegevens.ai_bekendheid) return "BEKENDHEID";
+    if (!gegevens.gebruiker_type) return "ROL";
+    if (!gegevens.vraag_tekst) return "VRAAG";
+    return "VRAAG"; // has everything but not confirmed yet
+  })();
+
+  // --- Sidebar display ---
   const gegevensItems = [
     { label: "Ervaring", value: gegevens.ai_bekendheid },
     { label: "Uw rol", value: gegevens.gebruiker_type },
     { label: "Onderwerp", value: gegevens.vraag_type },
-    { label: "Uw vraag", value: gegevens.vraag_tekst ? (gegevens.vraag_tekst.length > 40 ? gegevens.vraag_tekst.slice(0, 40) + "..." : gegevens.vraag_tekst) : null },
+    {
+      label: "Uw vraag",
+      value: gegevens.vraag_tekst
+        ? gegevens.vraag_tekst.length > 40
+          ? gegevens.vraag_tekst.slice(0, 40) + "..."
+          : gegevens.vraag_tekst
+        : null,
+    },
   ];
   const filledCount = gegevensItems.filter((i) => i.value).length;
 
-  // --- Core handler: send message → analyze → maybe search ---
-
+  // --- Core handler ---
   const handleSend = async (text: string) => {
     if (!text.trim() || isLoading) return;
     const msg = text.trim();
@@ -100,22 +138,39 @@ export default function ChatPage() {
       addBotMessage(result.bot_message);
 
       if (result.status === "ready_to_search") {
-        // Auto-trigger search
-        await doSearch(result.gegevens);
+        setFlowState("CONFIRMING");
       }
     } catch (err) {
       logger.error("page", "handleSend failed", err);
-      addBotMessage(
-        "Er is een fout opgetreden bij het verwerken van uw bericht. Probeer het opnieuw."
-      );
+      addBotMessage("Er is iets misgegaan. Probeer het opnieuw.");
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
     }
   };
 
+  const handleConfirm = async (confirmed: boolean) => {
+    if (confirmed) {
+      addUserMessage("Ja, dit klopt");
+      setGegevens((prev) => ({ ...prev, bevestigd: true }));
+      await doSearch(gegevens);
+    } else {
+      addUserMessage("Nee, ik wil iets aanpassen");
+      setGegevens((prev) => ({
+        ...prev,
+        vraag_tekst: null,
+        samenvatting: null,
+        vraag_type: null,
+        bevestigd: false,
+      }));
+      addBotMessage("Geen probleem. Wat wilt u weten?");
+      setFlowState("CHAT");
+    }
+  };
+
   const doSearch = async (g: GegevensModel) => {
     setFlowState("SEARCHING");
+    setIsLoading(true);
 
     const resultMsgId = generateId();
     setMessages((prev) => [
@@ -178,6 +233,8 @@ export default function ChatPage() {
       logger.error("page", "doSearch failed", err);
       addBotMessage("Er is een verbindingsfout opgetreden. Probeer het opnieuw.");
       setFlowState("CHAT");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -190,7 +247,7 @@ export default function ChatPage() {
       samenvatting: null,
       bevestigd: false,
     }));
-    addBotMessage("Prima! Stel gerust een nieuwe vraag.");
+    addBotMessage("Stel gerust een nieuwe vraag.");
     setFlowState("CHAT");
   };
 
@@ -211,8 +268,16 @@ export default function ChatPage() {
     }
   };
 
-  // --- Render ---
+  // --- Which buttons to show ---
+  const currentButtons = (() => {
+    if (isLoading) return null;
+    if (currentStep === "BEKENDHEID") return BEKENDHEID_OPTIONS;
+    if (currentStep === "ROL") return ROL_OPTIONS;
+    if (currentStep === "BEVESTIGING") return null; // handled separately
+    return null;
+  })();
 
+  // --- Render ---
   return (
     <div className="flex h-full">
       {/* Sidebar */}
@@ -223,17 +288,12 @@ export default function ChatPage() {
               <span className="text-white text-sm font-bold">IK</span>
             </div>
             <div>
-              <h1 className="text-sm font-semibold text-gray-900">
-                IKNL Infobot
-              </h1>
-              <p className="text-xs text-gray-500">
-                Kankerinformatie assistent
-              </p>
+              <h1 className="text-sm font-semibold text-gray-900">IKNL Infobot</h1>
+              <p className="text-xs text-gray-500">Kankerinformatie assistent</p>
             </div>
           </div>
         </div>
 
-        {/* Gegevensmodel display */}
         <div className="p-4 flex-1">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
             Uw profiel ({filledCount}/{gegevensItems.length})
@@ -243,9 +303,7 @@ export default function ChatPage() {
               <div key={item.label} className="flex items-start gap-2">
                 <div
                   className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                    item.value
-                      ? "bg-teal-600 text-white"
-                      : "bg-gray-100 text-gray-300"
+                    item.value ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-300"
                   }`}
                 >
                   {item.value ? (
@@ -264,9 +322,7 @@ export default function ChatPage() {
                   <p className={`text-xs ${item.value ? "text-gray-700 font-medium" : "text-gray-400"}`}>
                     {item.label}
                   </p>
-                  {item.value && (
-                    <p className="text-xs text-teal-700 truncate">{item.value}</p>
-                  )}
+                  {item.value && <p className="text-xs text-teal-700 truncate">{item.value}</p>}
                 </div>
               </div>
             ))}
@@ -275,15 +331,13 @@ export default function ChatPage() {
 
         <div className="p-4 border-t border-gray-200">
           <p className="text-xs text-gray-400 leading-relaxed">
-            Deze chat is een prototype en geeft geen persoonlijk medisch
-            advies. Raadpleeg altijd uw arts of specialist.
+            Dit is een prototype en geen medisch hulpmiddel. Raadpleeg altijd uw arts of specialist.
           </p>
         </div>
       </aside>
 
       {/* Main chat area */}
       <main className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
         <header className="h-14 bg-white border-b border-gray-200 flex items-center px-4 gap-3 shrink-0">
           <span className="text-sm text-gray-600">
             Sessie: {currentSessionId === "pending" ? "..." : currentSessionId.slice(0, 8) + "..."}
@@ -291,9 +345,7 @@ export default function ChatPage() {
           {isLoading && (
             <span className="ml-auto text-xs text-teal-700 flex items-center gap-1">
               <span className="w-2 h-2 bg-teal-600 rounded-full animate-pulse" />
-              {flowState === "SEARCHING"
-                ? "Bronnen worden doorzocht..."
-                : "Wordt verwerkt..."}
+              {flowState === "SEARCHING" ? "Bronnen worden doorzocht..." : "Wordt verwerkt..."}
             </span>
           )}
         </header>
@@ -308,22 +360,37 @@ export default function ChatPage() {
                 sessionId={currentSessionId}
                 query={
                   msg.role === "assistant" && idx > 0
-                    ? messages
-                        .slice(0, idx)
-                        .filter((m) => m.role === "user")
-                        .pop()?.content
+                    ? messages.slice(0, idx).filter((m) => m.role === "user").pop()?.content
                     : undefined
                 }
               />
             ))}
 
-            {/* Follow-up buttons after results */}
+            {/* Step-specific buttons */}
+            {currentButtons && (
+              <div className="ml-10">
+                <IntakeButtons
+                  options={currentButtons}
+                  onSelect={(v) => handleSend(v)}
+                  columns={currentStep === "ROL" ? 2 : 1}
+                />
+              </div>
+            )}
+
+            {/* Confirmation buttons */}
+            {currentStep === "BEVESTIGING" && !isLoading && (
+              <div className="ml-10">
+                <IntakeButtons
+                  options={BEVESTIGING_OPTIONS}
+                  onSelect={(v) => handleConfirm(v === "Ja, dit klopt")}
+                />
+              </div>
+            )}
+
+            {/* Results follow-up */}
             {flowState === "RESULTS" && !isLoading && (
               <div className="ml-10">
-                <ResultsList
-                  onMoreInfo={handleMoreInfo}
-                  onNewTopic={handleNewTopic}
-                />
+                <ResultsList onMoreInfo={handleMoreInfo} onNewTopic={handleNewTopic} />
               </div>
             )}
 
@@ -331,37 +398,47 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* Input area — always visible */}
-        <div className="border-t border-gray-200 bg-white p-4 shrink-0">
-          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex gap-3">
-            <textarea
-              ref={inputRef}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Stel uw vraag of vertel wie u bent..."
-              rows={1}
-              disabled={isLoading}
-              className="flex-1 resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !inputText.trim()}
-              className="px-5 py-3 bg-teal-700 text-white text-sm font-medium rounded-xl hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoading ? (
-                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              )}
-            </button>
-          </form>
-        </div>
+        {/* Input area — always visible (except during confirmation) */}
+        {currentStep !== "BEVESTIGING" && (
+          <div className="border-t border-gray-200 bg-white p-4 shrink-0">
+            <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex gap-3">
+              <textarea
+                ref={inputRef}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  currentStep === "BEKENDHEID"
+                    ? "Of typ uw antwoord..."
+                    : currentStep === "ROL"
+                    ? "Of beschrijf uw rol..."
+                    : currentStep === "VRAAG"
+                    ? "Stel uw vraag..."
+                    : "Stel een nieuwe vraag..."
+                }
+                rows={1}
+                disabled={isLoading}
+                className="flex-1 resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <button
+                type="submit"
+                disabled={isLoading || !inputText.trim()}
+                className="px-5 py-3 bg-teal-700 text-white text-sm font-medium rounded-xl hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isLoading ? (
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
       </main>
     </div>
   );
