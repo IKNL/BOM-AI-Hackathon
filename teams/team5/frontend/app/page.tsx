@@ -51,7 +51,13 @@ export default function ChatPage() {
     useState<UserProfile>("patient");
   const [inputText, setInputText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [sessionId] = useState(() => generateId());
+  const [sessionId] = useState("pending");
+  // Set session ID only on client to avoid hydration mismatch
+  const sessionIdRef = useRef<string>("");
+  if (sessionIdRef.current === "" && typeof window !== "undefined") {
+    sessionIdRef.current = generateId();
+  }
+  const currentSessionId = sessionIdRef.current || sessionId;
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -114,7 +120,7 @@ export default function ChatPage() {
     try {
       const stream = sendChatMessage({
         message: text,
-        session_id: sessionId,
+        session_id: currentSessionId,
         profile: currentProfile,
         history,
       });
@@ -308,7 +314,7 @@ export default function ChatPage() {
             </svg>
           </button>
           <span className="text-sm text-gray-600">
-            Sessie: {sessionId.slice(0, 8)}...
+            Sessie: {currentSessionId.slice(0, 8)}...
           </span>
           {isStreaming && (
             <span className="ml-auto text-xs text-teal-700 flex items-center gap-1">
@@ -325,7 +331,7 @@ export default function ChatPage() {
               <ChatMessage
                 key={msg.id || idx}
                 message={msg}
-                sessionId={sessionId}
+                sessionId={currentSessionId}
                 query={
                   msg.role === "assistant" && idx > 0
                     ? messages
