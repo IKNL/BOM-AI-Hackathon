@@ -8,7 +8,7 @@ Met daaronder de opties die gekozen kunnen worden:
 3. Erg bekend
 Afhankelijker van de keus van de user wordt bepaald in welke mate de chatbot de user zal begeleiden in de rest van het gesprek.
 
-Vervolgens wordt door de chatbot de vraag gesteld: 'Waaronder val je?'. De keuze opties zijn:
+Vervolgens wordt door de chatbot de vraag gesteld: 'Wat is uw rol?'. De keuze opties zijn:
 1. Ik ben patiënt of naaste
 2. Ik ben algemeen publiek
 3. ik ben een zorgverlener
@@ -27,7 +27,7 @@ Hierna geeft de chat een samenvatting, met de vraag of die het goed begrepen hee
 U bent een naaste en zoekt informatie over het verzorgen van uw partner met longkanker, klopt dit?'
 Als antwoord kan de user klikken op een van de twee knoppen: 'Ja, dit klopt' of 'Nee, ik wil iets aanpassen in mijn eerdere antwoorden.'
 
-Als de user klikt op op de nee-knop, wordt de user teruggebracht naar vraag twee: de aard van de gebruiker. Wanneer die is ingevoerd, kan de user-vraag aangepast worden.
+Als de user klikt op op de nee-knop, wordt de user teruggebracht naar vraag drie. Nu kan de user-vraag aangepast worden.
 Als de user klikt op de ja-knop, begint de chatbot de opdracht te verwerken. 
 
 
@@ -36,7 +36,7 @@ Wanneer de opdracht voor de chatbot duidelijk en verwerkt is, geeft de chatbot e
 
 Een voorbeeld antwoord is:
 'U bent een zorgverlener en zoekt informatie over anamnesevragen bij radiologische verdenking op een primair maligne beentumor. 
-Op deze sites kunt u hier meer informatie over geven:
+Op deze sites kunt u hier meer informatie over vinden:
 XXXX - Hier wordt informatie gegeven over diagnostiek bij een primaire tumor.
 YYY - Hier wordt informatie gegeven over beeldvormend onderzoek bij beentumoren.
 ZZZ - Hier wordt informatie gegeven over onderzoeken betreft beentumoren die gepubliceerd zijn in 2025.
@@ -46,7 +46,7 @@ Zoek je meer informatie of zoek je informatie over een nieuw onderwerp?'
 
 Een ander voorbeeld antwoord is:
 'U bent een naaste en zoekt informatie over het verzorgen van uw partner met longkanker. 
-Op deze sites kunt u hier meer informatie over geven:
+Op deze sites kunt u hier meer informatie over vinden:
 XXXX - Hier wordt informatie gegeven over het ziektebeeld longkanker.
 YYY - Hier wordt informatie gegeven over hoe u als naaste iemand met kanker kan verzorgen en ondersteunen.
 ZZZ - Hier wordt informatie gegeven over het dagelijkse leven van iemand met longkanker.
@@ -81,5 +81,6 @@ Nadat een van deze antwoorden is gegeven door de chatbot, komen er twee knoppen:
 
 ## Feedback
 Ten alle tijden is er aan de rechter kant van het venster een tabje met 'Feedback'. Als hierop wordt geklikt opent er een tabje waar feedback kan worden ingevoerd. Er kan hierin een cijfer worden gegeven van 1 tot 10, en er is een veld waarin de user feedback kan typen.
+Bij het opslaan van de feedback wordt ook het gesprek opgeslagen. Zo kan de context van de feedback ook begrepen worden als dit wordt verwerkt.
 
 
