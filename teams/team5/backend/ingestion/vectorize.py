@@ -33,7 +33,7 @@ CHUNK_OVERLAP = 50
 WORDS_PER_CHUNK = 375  # ~500 tokens / 1.33 tokens per Dutch word
 WORDS_OVERLAP = 38  # ~50 tokens
 
-EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "intfloat/multilingual-e5-large")
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 
 # Publication metadata lookup -- maps filename stems to metadata
 PUBLICATION_META: dict[str, dict] = {
