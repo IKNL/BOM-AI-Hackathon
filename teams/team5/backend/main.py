@@ -25,7 +25,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from sse_starlette.sse import EventSourceResponse
 
-from models import ChatRequest, FeedbackEntry
+from models import ChatRequest, FeedbackEntry, IntakeSummarizeRequest, IntakeSearchRequest
+from intake import summarize_question, search_and_format
 
 logger = logging.getLogger(__name__)
 
@@ -370,6 +371,41 @@ async def chat_stream(request: ChatRequest):
                     "event": sse_event.event,
                     "data": sse_event.data,
                 }
+
+    return EventSourceResponse(event_generator())
+
+
+@app.post("/api/intake/summarize")
+async def intake_summarize(request: IntakeSummarizeRequest):
+    """Summarize user question, extract kankersoort, classify vraag_type."""
+    result = await summarize_question(
+        gebruiker_type=request.gebruiker_type,
+        vraag_tekst=request.vraag_tekst,
+        model=LLM_MODEL,
+    )
+    return result.model_dump()
+
+
+@app.post("/api/intake/search")
+async def intake_search(request: IntakeSearchRequest):
+    """Query connectors and stream formatted results."""
+    connector_dict = {c.name: c for c in _connectors}
+
+    async def event_generator():
+        async for sse_event in search_and_format(
+            ai_bekendheid=request.ai_bekendheid,
+            gebruiker_type=request.gebruiker_type,
+            vraag_tekst=request.vraag_tekst,
+            samenvatting=request.samenvatting,
+            vraag_type=request.vraag_type,
+            kankersoort=request.kankersoort,
+            connectors=connector_dict,
+            model=LLM_MODEL,
+        ):
+            yield {
+                "event": sse_event.event,
+                "data": sse_event.data,
+            }
 
     return EventSourceResponse(event_generator())
 

@@ -152,3 +152,52 @@ class TestSearchAndFormat:
         assert "source_card" in event_types
         assert "token" in event_types
         assert "done" in event_types
+
+
+from httpx import ASGITransport, AsyncClient
+
+
+class TestIntakeEndpoints:
+    @pytest.mark.asyncio
+    async def test_summarize_endpoint(self):
+        mock_response = AsyncMock()
+        mock_response.choices = [
+            AsyncMock(
+                message=AsyncMock(
+                    content=json.dumps({
+                        "samenvatting": "U zoekt informatie over borstkanker.",
+                        "kankersoort": "borstkanker",
+                        "vraag_type": "patient_info",
+                    })
+                )
+            )
+        ]
+
+        with patch("intake.litellm.acompletion", return_value=mock_response):
+            from main import app
+
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post("/api/intake/summarize", json={
+                    "gebruiker_type": "patient",
+                    "vraag_tekst": "Wat is borstkanker?",
+                })
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "samenvatting" in data
+        assert "kankersoort" in data
+        assert "vraag_type" in data
+
+    @pytest.mark.asyncio
+    async def test_summarize_invalid_type(self):
+        from main import app
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post("/api/intake/summarize", json={
+                "gebruiker_type": "alien",
+                "vraag_tekst": "test",
+            })
+
+        assert resp.status_code == 422
