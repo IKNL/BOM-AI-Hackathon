@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "anthropic"
     LLM_MODEL: str = "claude-sonnet-4-20250514"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    EMBEDDING_MODEL: str = "multilingual-e5-large"
+    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
     CHROMADB_PATH: str = "data/chromadb"
     FEEDBACK_DB_PATH: str = "data/feedback.db"
     KANKER_NL_JSON_PATH: str = "data/kanker_nl_pages_all.json"
