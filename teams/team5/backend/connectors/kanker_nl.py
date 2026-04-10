@@ -31,8 +31,9 @@ class KankerNLConnector(SourceConnector):
     )
 
     def __init__(self, chromadb_path: str = "data/chromadb") -> None:
+        from connectors.embeddings import get_embedding_function
         client = chromadb.PersistentClient(path=chromadb_path)
-        self._collection = client.get_collection(name=COLLECTION_NAME)
+        self._collection = client.get_collection(name=COLLECTION_NAME, embedding_function=get_embedding_function())
         logger.info(
             "KankerNLConnector initialised with collection '%s' (%d documents)",
             COLLECTION_NAME,

@@ -23,19 +23,6 @@ RELIABILITY_MAP = {
     "report": "official",
 }
 
-# Known publication URLs — maps title to real URL
-PUBLICATION_URLS = {
-    "Uitgezaaide kanker 2025": "https://iknl.nl/uitgezaaide-kanker-2025",
-    "Man-vrouwverschillen bij kanker": "https://iknl.nl/vrouw-man-verschillen-bij-kanker",
-    "Trendrapport darmkanker": "https://iknl.nl/trendrapport-darmkanker",
-    "Comorbidities and survival in 8 cancers": "https://doi.org/10.1016/S1470-2045(22)00734-X",
-    "Head and neck cancers survival in Europe, Taiwan and Japan": "https://doi.org/10.1016/S1470-2045(23)00588-X",
-    "Ovarian cancer recurrence prediction": "https://doi.org/10.1016/j.ygyno.2023.01.029",
-    "Trends in treatment of stage I-III NSCLC": "https://doi.org/10.1016/j.lungcan.2023.107356",
-    "Trends in treatment of stage I-III SCLC": "https://doi.org/10.1016/j.lungcan.2023.107281",
-}
-
-
 class PublicationsConnector(SourceConnector):
     """Vector search connector for indexed publications and reports."""
 
@@ -48,8 +35,9 @@ class PublicationsConnector(SourceConnector):
     )
 
     def __init__(self, chromadb_path: str = "data/chromadb") -> None:
+        from connectors.embeddings import get_embedding_function
         client = chromadb.PersistentClient(path=chromadb_path)
-        self._collection = client.get_collection(name=COLLECTION_NAME)
+        self._collection = client.get_collection(name=COLLECTION_NAME, embedding_function=get_embedding_function())
         logger.info(
             "PublicationsConnector initialised with collection '%s' (%d documents)",
             COLLECTION_NAME,
@@ -115,7 +103,7 @@ async def search_publications(
                 visualizable=False,
             )
 
-        # Build citations from document metadata with real URLs
+        # Build citations from document metadata. URLs should be persisted at ingest time.
         citations: list[Citation] = []
         seen_titles: set[str] = set()
         for meta in metadatas:
@@ -125,7 +113,7 @@ async def search_publications(
             seen_titles.add(title)
             src_type = meta.get("source_type", "publication")
             reliability = RELIABILITY_MAP.get(src_type, "peer-reviewed")
-            url = PUBLICATION_URLS.get(title, f"https://iknl.nl/publicaties")
+            url = meta.get("url", "https://iknl.nl/onderzoek/publicaties")
             citations.append(
                 Citation(
                     url=url,
