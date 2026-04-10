@@ -128,7 +128,7 @@ TONE_MAP = {
 }
 
 STYLE_MAP = {
-    "patient": "Warm en meelevend. Erken dat het een moeilijke situatie kan zijn.",
+    "patient": "Warm en meelevend. Gebruik eenvoudige taal. Wees voorzichtig maar niet overdreven meevoelend.",
     "publiek": "Helder en informatief.",
     "zorgverlener": "Klinisch en precies. Gebruik correcte terminologie.",
     "student": "Educatief, met context.",

@@ -27,24 +27,25 @@ const INITIAL_GEGEVENS: GegevensModel = {
 };
 
 const BEKENDHEID_OPTIONS = [
-  { value: "Niet bekend met AI", label: "Niet bekend" },
-  { value: "Enigszins bekend met AI", label: "Enigszins bekend" },
-  { value: "Erg bekend met AI", label: "Erg bekend" },
+  { value: "Nee, niet eerder gebruikt", label: "Niet eerder" },
+  { value: "Ja, een beetje ervaring", label: "Een beetje" },
+  { value: "Ja, ik ben ervaren", label: "Ervaren" },
 ];
 
 const ROL_OPTIONS = [
   { value: "Ik ben patiënt of naaste", label: "Patiënt of naaste" },
+  { value: "Ik ben algemeen publiek", label: "Algemeen publiek" },
   { value: "Ik ben een zorgverlener", label: "Zorgverlener" },
-  { value: "Ik ben een onderzoeker", label: "Onderzoeker" },
+  { value: "Ik ben een student of docent", label: "Student of docent" },
   { value: "Ik ben een beleidsmaker", label: "Beleidsmaker" },
-  { value: "Ik ben een student", label: "Student" },
+  { value: "Ik ben een onderzoeker", label: "Onderzoeker" },
   { value: "Ik ben een journalist", label: "Journalist" },
   { value: "Anders", label: "Anders" },
 ];
 
 const BEVESTIGING_OPTIONS = [
   { value: "Ja, dit klopt", label: "Ja, dit klopt" },
-  { value: "Nee, ik wil iets aanpassen", label: "Nee, aanpassen" },
+  { value: "Nee, ik wil iets aanpassen", label: "Nee, ik wil aanpassen" },
 ];
 
 type FlowState = "CHAT" | "CONFIRMING" | "SEARCHING" | "RESULTS" | "OFF_TOPIC";
@@ -91,7 +92,7 @@ export default function ChatPage() {
     addBotMessage(
       "Welkom bij de IKNL Infobot! Ik help u informatie te vinden uit vertrouwde bronnen.\n\n" +
         "**Let op:** Dit is een prototype (BrabantHack_26). Dit is geen medisch hulpmiddel.\n\n" +
-        "**Hoe bekend bent u met het gebruik van een AI-chatbot?**"
+        "**Heeft u eerder een chatbot zoals deze gebruikt?**"
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
