@@ -10,6 +10,7 @@ import type {
   GegevensModel,
 } from "@/lib/types";
 import { summarizeQuestion, searchAndStream } from "@/lib/intake-client";
+import { logger } from "@/lib/logger";
 import ChatMessage from "@/components/ChatMessage";
 import IntakeButtons from "@/components/IntakeButtons";
 import ResultsList from "@/components/ResultsList";
@@ -164,7 +165,8 @@ export default function ChatPage() {
           `**Klopt dit?**`
       );
       setIntakeState("SAMENVATTING");
-    } catch {
+    } catch (err) {
+      logger.error("page", "handleVraagSubmit failed", err);
       addBotMessage(
         "Er is een fout opgetreden bij het verwerken van uw vraag. Probeer het opnieuw."
       );
@@ -239,7 +241,8 @@ export default function ChatPage() {
 
       setResultContent(fullText);
       setIntakeState("RESULTS");
-    } catch {
+    } catch (err) {
+      logger.error("page", "handleSearch failed", err);
       addBotMessage("Er is een verbindingsfout opgetreden. Probeer het opnieuw.");
       setIntakeState("SAMENVATTING");
     } finally {
@@ -317,7 +320,8 @@ export default function ChatPage() {
           `**Klopt dit?**`
       );
       setIntakeState("SAMENVATTING");
-    } catch {
+    } catch (err) {
+      logger.error("page", "handleFollowUpSubmit failed", err);
       addBotMessage("Er is een fout opgetreden. Probeer het opnieuw.");
     } finally {
       setIsLoading(false);

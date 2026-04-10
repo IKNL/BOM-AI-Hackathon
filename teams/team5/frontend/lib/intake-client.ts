@@ -1,4 +1,5 @@
 import type { IntakeSummarizeResponse, SSEEvent } from "./types";
+import { logger } from "./logger";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -12,12 +13,20 @@ export async function summarizeQuestion(
   gebruiker_type: string,
   vraag_tekst: string
 ): Promise<IntakeSummarizeResponse> {
-  const response = await fetch(`${API_BASE}/api/intake/summarize`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ gebruiker_type, vraag_tekst }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}/api/intake/summarize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gebruiker_type, vraag_tekst }),
+    });
+  } catch (err) {
+    logger.error("intake-client", "Network error calling /api/intake/summarize", err);
+    throw new Error("Network error: backend onbereikbaar");
+  }
   if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    logger.error("intake-client", `Summarize failed: HTTP ${response.status}`, body);
     throw new Error(`Summarize failed: ${response.status}`);
   }
   return response.json();
