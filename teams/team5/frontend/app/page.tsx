@@ -228,7 +228,7 @@ export default function ChatPage() {
                 IKNL Infobot
               </h1>
               <p className="text-xs text-gray-500">
-                Betrouwbare kankerinformatie
+                Kankerinformatie assistent
               </p>
             </div>
           </div>
