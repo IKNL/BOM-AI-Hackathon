@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../data:/app/data
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER:-anthropic}
+      - LLM_MODEL=${LLM_MODEL:-claude-sonnet-4-20250514}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-multilingual-e5-large}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
