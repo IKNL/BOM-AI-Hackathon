@@ -29,6 +29,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from models import ChatRequest, FeedbackEntry, IntakeSummarizeRequest, IntakeSearchRequest, IntakeAnalyzeRequest
 from intake import summarize_question, search_and_format, analyze_intake
+from intake_graph import run_intake_step
 from session_store import save_session, get_session, list_sessions
 
 # ---------------------------------------------------------------------------
@@ -436,29 +437,32 @@ async def chat_stream(request: ChatRequest):
 
 @app.post("/api/intake/analyze")
 async def intake_analyze(request: IntakeAnalyzeRequest):
-    """Conversational intake: analyze message, fill gegevensmodel, ask for missing info."""
+    """Conversational intake via LangGraph: step-specific agents fill gegevensmodel."""
     try:
-        result = await analyze_intake(
+        gegevens_dict = request.gegevens.model_dump()
+        result = await run_intake_step(
             message=request.message,
-            gegevens=request.gegevens,
+            gegevens=gegevens_dict,
             model=LLM_MODEL,
         )
 
         # Persist session if session_id provided
         if request.session_id:
             try:
+                from models import GegevensModel
+                g = GegevensModel(**result["gegevens"])
                 await save_session(
                     session_id=request.session_id,
-                    gegevens=result.gegevens,
+                    gegevens=g,
                     messages=[
                         {"role": "user", "content": request.message},
-                        {"role": "assistant", "content": result.bot_message},
+                        {"role": "assistant", "content": result["bot_message"]},
                     ],
                 )
             except Exception:
                 logger.warning("Failed to persist session %s", request.session_id)
 
-        return result.model_dump()
+        return result
     except Exception:
         logger.exception("intake_analyze failed for message=%s", request.message[:100])
         return JSONResponse(
