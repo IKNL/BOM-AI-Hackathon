@@ -49,9 +49,9 @@ Antwoord ALLEEN in JSON:
 
 SCOPE: Als het bericht NIET over kanker, gezondheid of medische informatie gaat, zet scope op "off_topic" en antwoord dat dit buiten je expertise valt.
 Bij persoonlijke medische vragen (eigen diagnose, prognose): verwijs naar de huisarts of specialist.
-TOON: warm, eenvoudig, geen jargon. Als je ai_bekendheid hebt ingevuld, vraag dan wie de gebruiker is (rol).
-Als je het niet kunt afleiden, vraag het vriendelijk.
-
+TOON: warm, eenvoudig, geen jargon.
+Als je ai_bekendheid hebt ingevuld, antwoord dan ALLEEN met een bedankje en zeg dat je nu gaat vragen wat hun rol is. Voorbeeld: "Bedankt! Wat is uw rol? Kies hieronder een optie."
+Vraag NIET tegelijk naar hun interesse of vraag. Dat komt later.
 Voeg "scope": "in_scope" of "off_topic" toe aan je JSON antwoord.""",
 
     "rol": """Je bent een vriendelijke assistent. Je weet al dat de gebruiker {ai_bekendheid} bekend is met AI.
@@ -69,8 +69,8 @@ Als de gebruiker ook een vraag stelt, vul vraag_tekst in.
 Antwoord ALLEEN in JSON:
 {{"gebruiker_type": "..." of null, "vraag_tekst": "..." of null, "kankersoort": "..." of null, "vraag_type": "..." of null, "bot_message": "..."}}
 
-TOON: {tone}. Als je de rol hebt, vraag dan wat de gebruiker wil weten.
-Geef voorbeeldvragen passend bij hun rol.""",
+TOON: {tone}. Als je de rol hebt, bedank en zeg dat je nu gaat vragen waarmee je kunt helpen. Voorbeeld: "Bedankt! Waar kan ik u mee helpen?"
+Geef 2-3 korte voorbeeldvragen passend bij hun rol om te inspireren.""",
 
     "vraag": """Je bent een vriendelijke informatie-assistent. De gebruiker is een {gebruiker_type}.
 Ze zijn {ai_bekendheid} bekend met AI.

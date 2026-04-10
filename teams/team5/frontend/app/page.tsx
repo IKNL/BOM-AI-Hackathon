@@ -430,7 +430,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input area — always visible (except during confirmation) */}
-        {currentStep !== "BEVESTIGING" && (
+        {currentStep !== "BEVESTIGING" && currentStep !== "OFF_TOPIC" && (
           <div className="border-t border-gray-200 bg-white p-4 shrink-0">
             <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex gap-3">
               <textarea
@@ -442,13 +442,13 @@ export default function ChatPage() {
                   currentStep === "BEKENDHEID"
                     ? "Of typ uw antwoord..."
                     : currentStep === "ROL"
-                    ? "Of beschrijf uw rol..."
+                    ? "Kies hierboven uw rol..."
                     : currentStep === "VRAAG"
                     ? "Stel uw vraag..."
                     : "Stel een nieuwe vraag..."
                 }
                 rows={1}
-                disabled={isLoading}
+                disabled={isLoading || currentStep === "BEKENDHEID" || currentStep === "ROL"}
                 className="flex-1 resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
