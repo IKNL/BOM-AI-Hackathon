@@ -388,31 +388,20 @@ async def search_and_format(
     else:
         bronnen_tekst = "Geen relevante bronnen gevonden."
 
-    try:
-        # Sanitize braces in dynamic content to prevent .format() crashes
-        safe_bronnen = bronnen_tekst.replace("{", "{{").replace("}", "}}")
-        safe_samenvatting = samenvatting.replace("{", "{{").replace("}", "}}")
-        guidance = _GUIDANCE_LEVEL.get(ai_bekendheid, _GUIDANCE_LEVEL["enigszins"])
-        format_prompt = _FORMAT_PROMPT_TEMPLATE.format(
-            gebruiker_type=gebruiker_type,
-            samenvatting=safe_samenvatting,
-            ai_bekendheid=guidance,
-            bronnen_tekst=safe_bronnen,
+    # Format results directly — no second LLM call needed
+    lines = [f"U zoekt informatie over: **{samenvatting}**\n"]
+    if all_sources:
+        lines.append("Op deze bronnen kunt u meer informatie vinden:\n")
+        for i, s in enumerate(all_sources[:5], 1):
+            lines.append(f"{i}. [{s['title']}]({s['url']}) — {s['summary']}")
+        lines.append("\nZoekt u meer informatie of heeft u een nieuwe vraag?")
+    else:
+        lines.append(
+            "Helaas heb ik geen relevante bronnen gevonden voor deze zoekopdracht. "
+            "Probeer uw vraag anders te formuleren, of neem contact op met "
+            "[IKNL](https://www.iknl.nl/contact) voor verdere hulp."
         )
-
-        response = await litellm.acompletion(
-            model=model,
-            messages=[{"role": "user", "content": format_prompt}],
-            temperature=0.3,
-            max_tokens=500,
-        )
-        final_text = response.choices[0].message.content or ""
-    except Exception as exc:
-        logger.exception("LLM formatting failed")
-        final_text = (
-            "Er is een fout opgetreden bij het formatteren van de resultaten. "
-            "De gevonden bronnen staan hieronder.\n\n" + bronnen_tekst
-        )
+    final_text = "\n".join(lines)
 
     chunk_size = 20
     for i in range(0, len(final_text), chunk_size):
