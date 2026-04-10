@@ -63,10 +63,13 @@ LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "openrouter")
 LLM_MODEL = os.environ.get("LLM_MODEL", "openai/gpt-4o-mini")
 CHROMADB_PATH = os.environ.get("CHROMADB_PATH", "data/chromadb")
 
-# LiteLLM reads OPENROUTER_API_KEY from env automatically for openrouter models
-# Set the model prefix for LiteLLM: openrouter/openai/gpt-4o-mini
+# Set model prefix for LiteLLM based on provider
 if LLM_PROVIDER == "openrouter" and not LLM_MODEL.startswith("openrouter/"):
     LLM_MODEL = f"openrouter/{LLM_MODEL}"
+elif LLM_PROVIDER == "bedrock" and not LLM_MODEL.startswith("openai/"):
+    # Bedrock via OpenAI-compatible gateway (Mantle): use openai/ prefix
+    # LiteLLM reads OPENAI_API_KEY + OPENAI_BASE_URL from env
+    LLM_MODEL = f"openai/{LLM_MODEL}"
 VERSION = "0.1.0"
 
 # ---------------------------------------------------------------------------
