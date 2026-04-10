@@ -18,7 +18,7 @@ function generateId(): string {
 const WELCOME_MESSAGE: ChatMessageType = {
   role: "assistant",
   content:
-    "Welkom bij de IKNL Kankerinformatie Chat!\n\n**Wat deze app wel is:**\nEen informatieassistent die u helpt betrouwbare kankerinformatie te vinden uit vertrouwde IKNL-bronnen: kanker.nl, NKR-Cijfers en de Kankeratlas. Elke uitspraak wordt voorzien van een bronvermelding.\n\n**Wat deze app niet is:**\nDit is geen medisch hulpmiddel en geen vervanging voor uw arts. De app geeft geen diagnoses, behandeladviezen of persoonlijke medische begeleiding. Neem bij medische vragen altijd contact op met uw huisarts of specialist.\n\n**Let op:** Dit is een prototype, ontwikkeld tijdens BrabantHack_26. De informatie kan onvolledig zijn.\n\nKies eerst uw profiel in het menu links, of stel direct uw vraag.\n\n**Voorbeeldvragen:**\n- Wat is borstkanker en hoe wordt het behandeld?\n- Hoe vaak komt longkanker voor bij mannen?\n- Wat zijn de overlevingscijfers voor darmkanker?\n- Is er een hoger risico op kanker in mijn regio?",
+    "Welkom bij de IKNL Infobot!\n\n**Wat deze app wel is:**\nEen informatieassistent die u helpt betrouwbare kankerinformatie te vinden uit vertrouwde IKNL-bronnen: kanker.nl, NKR-Cijfers en de Kankeratlas. Elke uitspraak wordt voorzien van een bronvermelding.\n\n**Wat deze app niet is:**\nDit is geen medisch hulpmiddel en geen vervanging voor uw arts. De app geeft geen diagnoses, behandeladviezen of persoonlijke medische begeleiding. Neem bij medische vragen altijd contact op met uw huisarts of specialist.\n\n**Let op:** Dit is een prototype, ontwikkeld tijdens BrabantHack_26. De informatie kan onvolledig zijn.\n\nKies eerst uw profiel in het menu links, of stel direct uw vraag.\n\n**Voorbeeldvragen:**\n- Wat is borstkanker en hoe wordt het behandeld?\n- Hoe vaak komt longkanker voor bij mannen?\n- Wat zijn de overlevingscijfers voor darmkanker?\n- Is er een hoger risico op kanker in mijn regio?",
   id: "welcome",
 };
 
@@ -224,7 +224,7 @@ export default function ChatPage() {
             </div>
             <div>
               <h1 className="text-sm font-semibold text-gray-900">
-                IKNL KankerChat
+                IKNL Infobot
               </h1>
               <p className="text-xs text-gray-500">
                 Betrouwbare kankerinformatie
