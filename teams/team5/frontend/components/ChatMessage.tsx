@@ -2,6 +2,9 @@
 
 import React from "react";
 import type { ChatMessage as ChatMessageType } from "@/lib/types";
+import SourceCard from "@/components/SourceCard";
+import DataChart from "@/components/DataChart";
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -42,10 +45,6 @@ export default function ChatMessage({
 }: ChatMessageProps) {
   const isUser = message.role === "user";
 
-  // Suppress unused variable warnings — these will be used by Task 14 components
-  void sessionId;
-  void query;
-
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
       <div
@@ -69,93 +68,28 @@ export default function ChatMessage({
               }}
             />
 
-            {/* Inline charts — placeholder for DataChart (Task 14) */}
+            {/* Inline charts */}
             {message.chartData && message.chartData.length > 0 && (
               <div className="mt-3 space-y-3">
                 {message.chartData.map((chart, idx) => (
-                  <div
-                    key={idx}
-                    className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-xs text-gray-500"
-                  >
-                    <span className="font-medium text-gray-700">
-                      {chart.title}
-                    </span>{" "}
-                    — grafiek wordt geladen (DataChart component volgt in Task
-                    14)
-                  </div>
+                  <DataChart key={idx} chartData={chart} />
                 ))}
               </div>
             )}
 
-            {/* Source cards — placeholder for SourceCard (Task 14) */}
+            {/* Source cards */}
             {message.sourceCards && message.sourceCards.length > 0 && (
-              <div className="mt-3 border-t border-gray-100 pt-3">
-                <p className="text-xs font-medium text-gray-500 mb-2">
-                  Bronnen:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {message.sourceCards.map((source, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-3 py-1 text-xs text-teal-800 border border-teal-200"
-                    >
-                      {source.source}
-                      {source.contributed && (
-                        <span className="text-teal-600" title="Heeft bijgedragen">
-                          *
-                        </span>
-                      )}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <SourceCard sources={message.sourceCards} />
             )}
 
-            {/* Feedback widget placeholder (Task 14) */}
+            {/* Feedback widget */}
             {message.id && message.id !== "welcome" && (
-              <div className="mt-2 border-t border-gray-100 pt-2 flex items-center gap-2">
-                <span className="text-xs text-gray-400">
-                  Was dit antwoord nuttig?
-                </span>
-                <button
-                  className="text-gray-400 hover:text-teal-600 transition-colors"
-                  title="Positief"
-                  aria-label="Positieve feedback"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"
-                    />
-                  </svg>
-                </button>
-                <button
-                  className="text-gray-400 hover:text-red-500 transition-colors"
-                  title="Negatief"
-                  aria-label="Negatieve feedback"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 002 2.3H10z"
-                    />
-                  </svg>
-                </button>
-              </div>
+              <FeedbackWidget
+                sessionId={sessionId}
+                messageId={message.id}
+                query={query || ""}
+                sourcesTried={message.sourceCards?.map((s) => s.source) || []}
+              />
             )}
           </>
         )}

@@ -9,6 +9,7 @@ import type {
 } from "@/lib/types";
 import { sendChatMessage } from "@/lib/chat-client";
 import ChatMessage from "@/components/ChatMessage";
+import ProfileSelector from "@/components/ProfileSelector";
 
 function generateId(): string {
   return crypto.randomUUID();
