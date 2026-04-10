@@ -77,11 +77,10 @@ export default function ChatPage() {
 
   // --- Gegevensmodel sidebar display ---
   const gegevensItems = [
-    { label: "Bekendheid AI", value: gegevens.ai_bekendheid },
-    { label: "Type gebruiker", value: gegevens.gebruiker_type },
-    { label: "Kankersoort", value: gegevens.kankersoort },
-    { label: "Type vraag", value: gegevens.vraag_type },
-    { label: "Vraag", value: gegevens.vraag_tekst ? (gegevens.vraag_tekst.length > 40 ? gegevens.vraag_tekst.slice(0, 40) + "..." : gegevens.vraag_tekst) : null },
+    { label: "Ervaring", value: gegevens.ai_bekendheid },
+    { label: "Uw rol", value: gegevens.gebruiker_type },
+    { label: "Onderwerp", value: gegevens.vraag_type },
+    { label: "Uw vraag", value: gegevens.vraag_tekst ? (gegevens.vraag_tekst.length > 40 ? gegevens.vraag_tekst.slice(0, 40) + "..." : gegevens.vraag_tekst) : null },
   ];
   const filledCount = gegevensItems.filter((i) => i.value).length;
 
