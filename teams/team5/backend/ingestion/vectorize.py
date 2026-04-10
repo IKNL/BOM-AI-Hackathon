@@ -11,11 +11,11 @@ Run directly:
 import hashlib
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
 import chromadb
-import fitz  # PyMuPDF
 
 # ---- Configuration ----
 
@@ -111,14 +111,72 @@ def chunk_text(text: str, words_per_chunk: int = WORDS_PER_CHUNK, overlap: int =
     return chunks
 
 
-def extract_pdf_text(pdf_path: Path) -> str:
-    """Extract all text from a PDF using PyMuPDF."""
-    doc = fitz.open(str(pdf_path))
-    text_parts = []
-    for page in doc:
-        text_parts.append(page.get_text())
-    doc.close()
-    return "\n".join(text_parts)
+def chunk_markdown(
+    text: str,
+    words_per_chunk: int = WORDS_PER_CHUNK,
+    overlap: int = WORDS_OVERLAP,
+) -> list[tuple[str, str]]:
+    """Split Markdown into chunks respecting heading boundaries.
+
+    Returns a list of (chunk_text, section_title) tuples.
+    Long sections are sub-split by word count. Short consecutive sections
+    are merged up to words_per_chunk.
+    """
+    sections: list[tuple[str, str]] = []
+    parts = re.split(r"(?=^#{1,3}\s)", text, flags=re.MULTILINE)
+
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        heading_match = re.match(r"^#{1,3}\s+(.*)", part)
+        title = heading_match.group(1).strip() if heading_match else ""
+        sections.append((part, title))
+
+    if not sections:
+        plain_chunks = chunk_text(text, words_per_chunk, overlap)
+        return [(c, "") for c in plain_chunks]
+
+    result: list[tuple[str, str]] = []
+    buffer_text = ""
+    buffer_title = ""
+
+    for section_text, title in sections:
+        section_words = len(section_text.split())
+
+        if section_words > words_per_chunk:
+            if buffer_text.strip():
+                result.append((buffer_text.strip(), buffer_title))
+                buffer_text = ""
+                buffer_title = ""
+            sub_chunks = chunk_text(section_text, words_per_chunk, overlap)
+            for chunk in sub_chunks:
+                result.append((chunk, title))
+        else:
+            combined_words = len(buffer_text.split()) + section_words
+            if combined_words <= words_per_chunk:
+                if not buffer_text:
+                    buffer_title = title
+                buffer_text += "\n\n" + section_text if buffer_text else section_text
+            else:
+                if buffer_text.strip():
+                    result.append((buffer_text.strip(), buffer_title))
+                buffer_text = section_text
+                buffer_title = title
+
+    if buffer_text.strip():
+        result.append((buffer_text.strip(), buffer_title))
+
+    return result
+
+
+def extract_pdf_markdown(pdf_path: Path) -> str:
+    """Convert a PDF to Markdown using Docling, preserving tables and headings."""
+    from docling.document_converter import DocumentConverter
+
+    converter = DocumentConverter()
+    result = converter.convert(str(pdf_path))
+    return result.document.export_to_markdown()
 
 
 def get_embedding_function():
@@ -270,23 +328,24 @@ def ingest_publications(client: chromadb.ClientAPI, ef):
                 }
 
             print(f"  Extracting: {pdf_path.name} ({meta['title']})")
-            text = extract_pdf_text(pdf_path)
-            if not text.strip():
+            md_text = extract_pdf_markdown(pdf_path)
+            if not md_text.strip():
                 print(f"    WARNING: No text extracted from {pdf_path.name}")
                 continue
 
-            chunks = chunk_text(text)
-            print(f"    {len(chunks)} chunks from {len(text)} chars")
+            chunks = chunk_markdown(md_text)
+            print(f"    {len(chunks)} chunks from {len(md_text)} chars")
 
-            for i, chunk in enumerate(chunks):
+            for i, (chunk_text_content, section_title) in enumerate(chunks):
                 doc_id = f"pub_{hashlib.md5(stem.encode()).hexdigest()[:12]}_{i}"
                 all_ids.append(doc_id)
-                all_documents.append(chunk)
+                all_documents.append(chunk_text_content)
                 all_metadatas.append({
                     "source_type": meta["source_type"],
                     "title": meta["title"],
                     "language": meta["language"],
                     "topic": meta["topic"],
+                    "section_title": section_title,
                 })
 
     print(f"  Total publication chunks: {len(all_documents)}")
