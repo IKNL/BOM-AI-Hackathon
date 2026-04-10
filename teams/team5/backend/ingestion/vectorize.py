@@ -40,48 +40,56 @@ PUBLICATION_META: dict[str, dict] = {
     "rapport_manvrouwverschillenbij-kanker_definitief2": {
         "source_type": "report",
         "title": "Man-vrouwverschillen bij kanker",
+        "url": "https://iknl.nl/vrouw-man-verschillen-bij-kanker",
         "language": "nl",
         "topic": "Sekseverschillen in incidentie en uitkomsten",
     },
     "rapport_UItgezaaide-kanker_2025_cijfers-inzichten-en-uitdagingen": {
         "source_type": "report",
         "title": "Uitgezaaide kanker 2025",
+        "url": "https://iknl.nl/uitgezaaide-kanker-2025",
         "language": "nl",
         "topic": "Cijfers, inzichten en uitdagingen bij uitgezaaide kanker",
     },
     "trendrapport_darmkanker_def": {
         "source_type": "report",
         "title": "Trendrapport darmkanker",
+        "url": "https://iknl.nl/trendrapport-darmkanker",
         "language": "nl",
         "topic": "Langetermijntrends bij darmkanker",
     },
     "comorbidities_medication_use_and_overall_survival_in_eight_cancers": {
         "source_type": "publication",
         "title": "Comorbidities and survival in 8 cancers",
+        "url": "https://doi.org/10.1016/S1470-2045(22)00734-X",
         "language": "en",
         "topic": "Impact of comorbid conditions on cancer survival (The Lancet)",
     },
     "head_and_neck_cancers_survival_in_europe_taiwan_and_japan": {
         "source_type": "publication",
         "title": "Head and neck cancers survival in Europe, Taiwan and Japan",
+        "url": "https://doi.org/10.1016/S1470-2045(23)00588-X",
         "language": "en",
         "topic": "International comparison of head and neck cancer survival",
     },
     "ovarian_cancer_recurrence_prediction": {
         "source_type": "publication",
         "title": "Ovarian cancer recurrence prediction",
+        "url": "https://doi.org/10.1016/j.ygyno.2023.01.029",
         "language": "en",
         "topic": "ML model for ovarian cancer outcomes (ESMO)",
     },
     "trends_and_variations_in_the_treatment_of_stage_I_III_non_small_cell_lung_cancer": {
         "source_type": "publication",
         "title": "Trends in treatment of stage I-III NSCLC",
+        "url": "https://doi.org/10.1016/j.lungcan.2023.107356",
         "language": "en",
         "topic": "Treatment trends for non-small cell lung cancer",
     },
     "trends_and_variations_in_the_treatment_of_stage_I_III_small_cell_lung_cancer": {
         "source_type": "publication",
         "title": "Trends in treatment of stage I-III SCLC",
+        "url": "https://doi.org/10.1016/j.lungcan.2023.107281",
         "language": "en",
         "topic": "Treatment trends for small cell lung cancer",
     },
@@ -170,11 +178,11 @@ def chunk_markdown(
     return result
 
 
-def extract_pdf_markdown(pdf_path: Path) -> str:
+def extract_pdf_markdown(pdf_path: Path, converter=None) -> str:
     """Convert a PDF to Markdown using Docling, preserving tables and headings."""
-    from docling.document_converter import DocumentConverter
-
-    converter = DocumentConverter()
+    if converter is None:
+        from docling.document_converter import DocumentConverter
+        converter = DocumentConverter()
     result = converter.convert(str(pdf_path))
     return result.document.export_to_markdown()
 
@@ -314,6 +322,9 @@ def ingest_publications(client: chromadb.ClientAPI, ef):
     if SCIENTIFIC_DIR.exists():
         pdf_dirs.append(SCIENTIFIC_DIR)
 
+    from docling.document_converter import DocumentConverter
+    converter = DocumentConverter()
+
     for pdf_dir in pdf_dirs:
         for pdf_path in sorted(pdf_dir.glob("*.pdf")):
             stem = pdf_path.stem
@@ -323,12 +334,13 @@ def ingest_publications(client: chromadb.ClientAPI, ef):
                 meta = {
                     "source_type": "publication",
                     "title": stem.replace("_", " ").title(),
+                    "url": "https://iknl.nl/onderzoek/publicaties",
                     "language": "en",
                     "topic": "Unknown",
                 }
 
             print(f"  Extracting: {pdf_path.name} ({meta['title']})")
-            md_text = extract_pdf_markdown(pdf_path)
+            md_text = extract_pdf_markdown(pdf_path, converter=converter)
             if not md_text.strip():
                 print(f"    WARNING: No text extracted from {pdf_path.name}")
                 continue
@@ -343,6 +355,7 @@ def ingest_publications(client: chromadb.ClientAPI, ef):
                 all_metadatas.append({
                     "source_type": meta["source_type"],
                     "title": meta["title"],
+                    "url": meta["url"],
                     "language": meta["language"],
                     "topic": meta["topic"],
                     "section_title": section_title,
