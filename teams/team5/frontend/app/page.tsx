@@ -138,6 +138,10 @@ export default function ChatPage() {
       addBotMessage(result.bot_message);
 
       if (result.status === "ready_to_search") {
+        // User already confirmed (via confirm node) — search immediately
+        await doSearch(result.gegevens);
+      } else if (result.status === "confirm_needed") {
+        // Summary ready, needs explicit confirmation
         setFlowState("CONFIRMING");
       }
     } catch (err) {

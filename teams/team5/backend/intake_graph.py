@@ -81,7 +81,13 @@ Analyseer de vraag:
 3. Welk type informatie zoeken ze? (vraag_type: patient_info / cijfers / regionaal / onderzoek / breed)
 4. Schrijf een korte samenvatting (samenvatting)
 
-Als de vraag onduidelijk is, vraag dan door met voorbeelden.
+Als de vraag DUIDELIJK genoeg is om mee te zoeken:
+- Vul alle velden in
+- Schrijf een bevestigingsvraag als bot_message: "Als ik het goed begrijp bent u een [rol] en zoekt u informatie over [samenvatting]. Klopt dit?"
+
+Als de vraag ONDUIDELIJK is of te vaag:
+- Vraag door met voorbeelden
+- Laat samenvatting op null
 
 Antwoord ALLEEN in JSON:
 {{"vraag_tekst": "..." of null, "kankersoort": "..." of null, "vraag_type": "..." of null, "samenvatting": "..." of null, "bot_message": "..."}}
@@ -344,8 +350,8 @@ async def run_intake_step(
         status = "ready_to_search"
     elif not g.get("ai_bekendheid") or not g.get("gebruiker_type") or not g.get("vraag_tekst"):
         status = "need_more_info"
-    elif g.get("samenvatting") and not g.get("bevestigd"):
-        status = "ready_to_search"  # has summary, auto-confirm
+    elif g.get("samenvatting"):
+        status = "confirm_needed"  # has summary, needs explicit user confirmation
     else:
         status = "need_more_info"
 
