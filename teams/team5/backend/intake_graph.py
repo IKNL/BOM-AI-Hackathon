@@ -47,8 +47,12 @@ Als de gebruiker MEER informatie geeft (wie ze zijn, een vraag), vul dat ook in.
 Antwoord ALLEEN in JSON:
 {{"ai_bekendheid": "..." of null, "gebruiker_type": "..." of null, "vraag_tekst": "..." of null, "kankersoort": "..." of null, "vraag_type": "..." of null, "bot_message": "..."}}
 
+SCOPE: Als het bericht NIET over kanker, gezondheid of medische informatie gaat, zet scope op "off_topic" en antwoord dat dit buiten je expertise valt.
+Bij persoonlijke medische vragen (eigen diagnose, prognose): verwijs naar de huisarts of specialist.
 TOON: warm, eenvoudig, geen jargon. Als je ai_bekendheid hebt ingevuld, vraag dan wie de gebruiker is (rol).
-Als je het niet kunt afleiden, vraag het vriendelijk.""",
+Als je het niet kunt afleiden, vraag het vriendelijk.
+
+Voeg "scope": "in_scope" of "off_topic" toe aan je JSON antwoord.""",
 
     "rol": """Je bent een vriendelijke assistent. Je weet al dat de gebruiker {ai_bekendheid} bekend is met AI.
 Je ENIGE taak nu: bepaal welke rol de gebruiker heeft.
@@ -89,11 +93,16 @@ Als de vraag DUIDELIJK genoeg is om mee te zoeken:
   De LAATSTE zin moet ALTIJD een vraag zijn die met ja of nee beantwoord kan worden.
 
 Als de vraag ONDUIDELIJK is of te vaag:
-- Vraag door met voorbeelden
+- Vraag door met voorbeelden passend bij het gebruikerstype
 - Laat samenvatting op null
 
+Als de vraag BUITEN SCOPE valt (niet over kanker, gezondheid of IKNL-bronnen):
+- Zet scope op "off_topic"
+- Antwoord: "Ik begrijp dat u informatie zoekt over [onderwerp]. Helaas valt dit buiten mijn expertise. Ik kan u helpen met vragen over kanker en aanverwante gezondheidsonderwerpen. U kunt ook contact opnemen met IKNL voor verdere hulp."
+- Laat alle andere velden op null
+
 Antwoord ALLEEN in JSON:
-{{"vraag_tekst": "..." of null, "kankersoort": "..." of null, "vraag_type": "..." of null, "samenvatting": "..." of null, "bot_message": "..."}}
+{{"vraag_tekst": "..." of null, "kankersoort": "..." of null, "vraag_type": "..." of null, "samenvatting": "..." of null, "scope": "in_scope" of "off_topic", "bot_message": "..."}}
 
 TOON: {tone}. STIJL: {style}""",
 
@@ -187,6 +196,10 @@ async def bekendheid_node(state: dict) -> dict:
     result = await _call_llm(prompt, state["model"])
 
     gegevens = state["gegevens"]
+
+    if result.get("scope") == "off_topic":
+        return {**state, "gegevens": gegevens, "bot_message": result.get("bot_message", ""), "off_topic": True}
+
     if result.get("ai_bekendheid"):
         gegevens["ai_bekendheid"] = _normalize_bekendheid(result["ai_bekendheid"]) or gegevens.get("ai_bekendheid")
     if result.get("gebruiker_type"):
@@ -198,7 +211,7 @@ async def bekendheid_node(state: dict) -> dict:
     if result.get("vraag_type"):
         gegevens["vraag_type"] = result["vraag_type"]
 
-    return {**state, "gegevens": gegevens, "bot_message": result.get("bot_message", "")}
+    return {**state, "gegevens": gegevens, "bot_message": result.get("bot_message", ""), "off_topic": False}
 
 
 async def rol_node(state: dict) -> dict:
@@ -211,6 +224,9 @@ async def rol_node(state: dict) -> dict:
     )
     result = await _call_llm(prompt, state["model"])
 
+    if result.get("scope") == "off_topic":
+        return {**state, "gegevens": g, "bot_message": result.get("bot_message", ""), "off_topic": True}
+
     if result.get("gebruiker_type"):
         g["gebruiker_type"] = _normalize_type(result["gebruiker_type"]) or g.get("gebruiker_type")
     if result.get("vraag_tekst"):
@@ -220,7 +236,7 @@ async def rol_node(state: dict) -> dict:
     if result.get("vraag_type"):
         g["vraag_type"] = result["vraag_type"]
 
-    return {**state, "gegevens": g, "bot_message": result.get("bot_message", "")}
+    return {**state, "gegevens": g, "bot_message": result.get("bot_message", ""), "off_topic": False}
 
 
 async def vraag_node(state: dict) -> dict:
@@ -236,6 +252,10 @@ async def vraag_node(state: dict) -> dict:
     )
     result = await _call_llm(prompt, state["model"])
 
+    # Check if off-topic
+    if result.get("scope") == "off_topic":
+        return {**state, "gegevens": g, "bot_message": result.get("bot_message", ""), "off_topic": True}
+
     if result.get("vraag_tekst"):
         g["vraag_tekst"] = result["vraag_tekst"]
     if result.get("kankersoort") and result["kankersoort"] not in ("geen", "null", ""):
@@ -245,7 +265,7 @@ async def vraag_node(state: dict) -> dict:
     if result.get("samenvatting"):
         g["samenvatting"] = result["samenvatting"]
 
-    return {**state, "gegevens": g, "bot_message": result.get("bot_message", "")}
+    return {**state, "gegevens": g, "bot_message": result.get("bot_message", ""), "off_topic": False}
 
 
 async def confirm_node(state: dict) -> dict:
@@ -349,12 +369,14 @@ async def run_intake_step(
     g = result["gegevens"]
 
     # Determine status for the frontend
-    if g.get("bevestigd"):
+    if result.get("off_topic"):
+        status = "off_topic"
+    elif g.get("bevestigd"):
         status = "ready_to_search"
     elif not g.get("ai_bekendheid") or not g.get("gebruiker_type") or not g.get("vraag_tekst"):
         status = "need_more_info"
     elif g.get("samenvatting"):
-        status = "confirm_needed"  # has summary, needs explicit user confirmation
+        status = "confirm_needed"
     else:
         status = "need_more_info"
 

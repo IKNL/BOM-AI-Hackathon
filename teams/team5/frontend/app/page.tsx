@@ -47,7 +47,7 @@ const BEVESTIGING_OPTIONS = [
   { value: "Nee, ik wil iets aanpassen", label: "Nee, aanpassen" },
 ];
 
-type FlowState = "CHAT" | "CONFIRMING" | "SEARCHING" | "RESULTS";
+type FlowState = "CHAT" | "CONFIRMING" | "SEARCHING" | "RESULTS" | "OFF_TOPIC";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
@@ -101,6 +101,7 @@ export default function ChatPage() {
     if (flowState === "CONFIRMING") return "BEVESTIGING";
     if (flowState === "SEARCHING") return "SEARCHING";
     if (flowState === "RESULTS") return "RESULTS";
+    if (flowState === "OFF_TOPIC") return "OFF_TOPIC";
     if (!gegevens.ai_bekendheid) return "BEKENDHEID";
     if (!gegevens.gebruiker_type) return "ROL";
     if (!gegevens.vraag_tekst) return "VRAAG";
@@ -138,11 +139,11 @@ export default function ChatPage() {
       addBotMessage(result.bot_message);
 
       if (result.status === "ready_to_search") {
-        // User already confirmed (via confirm node) — search immediately
         await doSearch(result.gegevens);
       } else if (result.status === "confirm_needed") {
-        // Summary ready, needs explicit confirmation
         setFlowState("CONFIRMING");
+      } else if (result.status === "off_topic") {
+        setFlowState("OFF_TOPIC");
       }
     } catch (err) {
       logger.error("page", "handleSend failed", err);
@@ -396,6 +397,31 @@ export default function ChatPage() {
             {flowState === "RESULTS" && !isLoading && (
               <div className="ml-10">
                 <ResultsList onMoreInfo={handleMoreInfo} onNewTopic={handleNewTopic} />
+              </div>
+            )}
+
+            {/* Off-topic: redirect to IKNL or try again */}
+            {flowState === "OFF_TOPIC" && !isLoading && (
+              <div className="ml-10 flex gap-3">
+                <a
+                  href="https://www.iknl.nl/contact"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 text-sm font-medium rounded-xl border border-teal-300 bg-teal-50 text-teal-800 hover:bg-teal-100 transition-colors"
+                >
+                  Neem contact op met IKNL
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGegevens((prev) => ({ ...prev, vraag_tekst: null, samenvatting: null, vraag_type: null }));
+                    addBotMessage("Stel gerust een nieuwe vraag over kanker of gezondheid.");
+                    setFlowState("CHAT");
+                  }}
+                  className="px-4 py-2.5 text-sm font-medium rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Stel opnieuw een vraag
+                </button>
               </div>
             )}
 

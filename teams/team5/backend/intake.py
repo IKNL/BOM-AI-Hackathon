@@ -277,8 +277,12 @@ Hieronder staan de gevonden bronnen. Maak een antwoord in dit formaat:
    - Eén zin over wat daar te vinden is met betrekking tot de vraag
 3. Sluit af met: "Zoekt u meer informatie of heeft u een nieuwe vraag?"
 
-BELANGRIJK: Vat geen medische inhoud samen. Verwijs alleen naar de bron.
-Pas je taalgebruik aan op basis van de bekendheid: {ai_bekendheid}
+BELANGRIJK:
+- Vat geen medische inhoud samen. Verwijs alleen naar de bron.
+- Geef NOOIT persoonlijk medisch advies, diagnoses of behandeladviezen.
+- Bij persoonlijke medische vragen (over eigen diagnose, behandeling, prognose): verwijs door naar de huisarts of behandelend specialist.
+- Als er GEEN relevante bronnen zijn gevonden: zeg dat eerlijk en verwijs naar kanker.nl of IKNL (https://www.iknl.nl/contact).
+- Pas je taalgebruik aan op basis van de bekendheid: {ai_bekendheid}
 
 Gevonden bronnen:
 {bronnen_tekst}"""

@@ -98,5 +98,5 @@ export interface IntakeSummarizeResponse {
 export interface IntakeAnalyzeResponse {
   gegevens: GegevensModel;
   bot_message: string;
-  status: "need_more_info" | "ready_to_search" | "confirm_needed" | "unclear";
+  status: "need_more_info" | "ready_to_search" | "confirm_needed" | "unclear" | "off_topic";
 }
