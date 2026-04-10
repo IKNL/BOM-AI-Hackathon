@@ -33,7 +33,7 @@ CHUNK_OVERLAP = 50
 WORDS_PER_CHUNK = 375  # ~500 tokens / 1.33 tokens per Dutch word
 WORDS_OVERLAP = 38  # ~50 tokens
 
-EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "intfloat/multilingual-e5-small")
 
 # Publication metadata lookup -- maps filename stems to metadata
 PUBLICATION_META: dict[str, dict] = {
@@ -211,8 +211,8 @@ def ingest_kanker_nl(client: chromadb.ClientAPI, ef):
     print(f"  Pages processed: {len(pages) - skipped}, skipped: {skipped}")
     print(f"  Total chunks: {len(all_documents)}")
 
-    # ChromaDB has a batch limit of ~41666 -- add in batches of 5000
-    batch_size = 5000
+    # ChromaDB has a batch limit of ~41666 -- add in batches of 500
+    batch_size = 500
     for i in range(0, len(all_documents), batch_size):
         end = min(i + batch_size, len(all_documents))
         collection.add(
