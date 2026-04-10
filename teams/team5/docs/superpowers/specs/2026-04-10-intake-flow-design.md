@@ -19,11 +19,14 @@ class GegevensModel(BaseModel):
     ] | None = None
     vraag_tekst: str | None = None
     kankersoort: str | None = None       # only if explicitly mentioned by user
+    vraag_type: str | None = None        # patient_info | cijfers | regionaal | onderzoek | breed
     samenvatting: str | None = None      # AI-generated summary for validation
     bevestigd: bool = False              # user confirmed the summary
 ```
 
-No stage, region, or personal medical details. `kankersoort` is extracted only when the user literally mentions a cancer type.
+No stage, region, or personal medical details. `kankersoort` is extracted only when the user literally mentions a cancer type — the system never proactively asks about cancer type.
+
+**User-driven depth principle:** Epidemiological data (statistics, trends, regional variation) is only shown when the user's question explicitly asks for it. If someone asks "wat is longkanker?", they get kanker.nl patient info only. If they ask "hoe vaak komt longkanker voor?", NKR-Cijfers results are included. The system follows the user's lead, never upsells data sources.
 
 ---
 
@@ -134,12 +137,18 @@ Je bent een intake-assistent. De gebruiker heeft de volgende informatie gegeven:
 - Type gebruiker: {gebruiker_type}
 - Vraag: {vraag_tekst}
 
-Doe twee dingen:
+Doe drie dingen:
 1. Schrijf een korte, natuurlijke samenvatting van wat de gebruiker zoekt (max 2 zinnen).
-2. Als de gebruiker een specifiek type kanker noemt, geef die naam terug als "kankersoort". Zo niet, antwoord "geen".
+2. Als de gebruiker een specifiek type kanker noemt, geef die naam terug als "kankersoort". Zo niet, antwoord "geen". Vraag NOOIT zelf naar een kankersoort.
+3. Classificeer welk type informatie de gebruiker zoekt als "vraag_type". Kies uit:
+   - "patient_info" — algemene informatie, symptomen, behandeling, leven met kanker
+   - "cijfers" — statistieken, incidentie, overleving, prevalentie
+   - "regionaal" — regionale verschillen, gebiedsvergelijking
+   - "onderzoek" — wetenschappelijke publicaties, rapporten, studies
+   - "breed" — combinatie of onduidelijk
 
 Antwoord in JSON:
-{"samenvatting": "...", "kankersoort": "..." of "geen"}
+{"samenvatting": "...", "kankersoort": "..." of "geen", "vraag_type": "..."}
 ```
 
 This is the only LLM call in the intake. No medical interpretation.
@@ -163,10 +172,12 @@ When `bevestigd = true`, query connectors:
 
 ### Search execution
 
-1. Query priority-1 connectors with `vraag_tekst` (+ `kankersoort` filter if present)
-2. Query priority-2 if fewer than 5 results
-3. Deduplicate and rank by relevance
-4. Return top 5 results
+1. **Match question intent first** — if the question asks about statistics/cijfers, include NKR-Cijfers. If it asks about regional differences, include Cancer Atlas. If it asks about treatment/symptoms, include kanker.nl. Only include sources relevant to what was asked.
+2. Use the priority table as a **tiebreaker** when multiple sources are equally relevant, not as a forced ordering.
+3. Query matched connectors with `vraag_tekst` (+ `kankersoort` filter if present)
+4. If fewer than 5 results from matched connectors, expand to priority-2
+5. Deduplicate and rank by relevance
+6. Return top 5 results
 
 ### Response format
 
