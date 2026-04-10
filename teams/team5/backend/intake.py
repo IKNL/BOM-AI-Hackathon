@@ -125,9 +125,29 @@ async def analyze_intake(
         parsed = json.loads(clean)
         g = parsed.get("gegevens", {})
 
+        # Normalize LLM output — it often returns accented Dutch variants
+        _TYPE_NORMALIZE = {
+            "patiënt": "patient", "patiënt of naaste": "patient", "naaste": "patient",
+            "publiek": "publiek", "algemeen publiek": "publiek",
+            "arts": "zorgverlener", "dokter": "zorgverlener", "verpleegkundige": "zorgverlener",
+            "wetenschapper": "onderzoeker", "onderzoeker of wetenschapper": "onderzoeker",
+            "student of docent": "student", "docent": "student",
+        }
+        raw_type = (g.get("gebruiker_type") or "").lower().strip()
+        norm_type = _TYPE_NORMALIZE.get(raw_type, raw_type) if raw_type else None
+
+        # Validate against allowed values, fall back to existing
+        _VALID_TYPES = {"patient", "publiek", "zorgverlener", "student", "beleidsmaker", "onderzoeker", "journalist", "anders"}
+        if norm_type and norm_type not in _VALID_TYPES:
+            norm_type = gegevens.gebruiker_type  # keep existing if LLM gave garbage
+
+        _VALID_BEKENDHEID = {"niet_bekend", "enigszins", "erg_bekend"}
+        raw_bek = (g.get("ai_bekendheid") or "").lower().strip()
+        norm_bek = raw_bek if raw_bek in _VALID_BEKENDHEID else None
+
         updated = GegevensModel(
-            ai_bekendheid=g.get("ai_bekendheid") or gegevens.ai_bekendheid,
-            gebruiker_type=g.get("gebruiker_type") or gegevens.gebruiker_type,
+            ai_bekendheid=norm_bek or gegevens.ai_bekendheid,
+            gebruiker_type=norm_type or gegevens.gebruiker_type,
             vraag_tekst=g.get("vraag_tekst") or gegevens.vraag_tekst,
             kankersoort=g.get("kankersoort") if g.get("kankersoort") not in (None, "geen", "null", "") else gegevens.kankersoort,
             vraag_type=g.get("vraag_type") or gegevens.vraag_type,
