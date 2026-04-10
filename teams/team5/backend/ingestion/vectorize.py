@@ -291,7 +291,7 @@ def ingest_publications(client: chromadb.ClientAPI, ef):
 
     print(f"  Total publication chunks: {len(all_documents)}")
 
-    batch_size = 5000
+    batch_size = 500
     for i in range(0, len(all_documents), batch_size):
         end = min(i + batch_size, len(all_documents))
         collection.add(
