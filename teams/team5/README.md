@@ -1,72 +1,87 @@
-# Cancer Information Chat System
+# Team 5 — Cancer Information Chat
 
-Hackathon project (BrabantHack_26, IKNL Med Tech track) that connects IKNL's distributed trusted cancer information sources into a unified chat experience with full citation provenance.
+> **A solution to inform people faster, better, and more reliably by connecting IKNL's distributed, trusted sources in a smarter, more accessible, and future-proof way.**
+
+## The Problem
+
+People increasingly turn to general AI for cancer information, but the results are unreliable. Meanwhile, IKNL's trusted knowledge is spread across 5+ different platforms — patients, professionals, and policymakers must visit multiple websites to get a complete picture.
+
+## Our Solution
+
+A chat-based interface that connects all of IKNL's trusted sources into a single conversation. Ask a question in natural language, get an answer grounded in real IKNL data — with full source citations.
+
+The system adapts to who you are:
+- **Patients** get warm, plain-Dutch explanations from kanker.nl
+- **Professionals** get clinical data, statistics, and guidelines
+- **Policymakers** get regional comparisons and trend analyses
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   Next.js Frontend                       │
+│  Chat UI (streaming) | Source Cards | Data Viz (charts)  │
+└────────────────────────┬────────────────────────────────┘
+                         │ SSE/streaming
+┌────────────────────────┴────────────────────────────────┐
+│                FastAPI Backend                            │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │            Chat Orchestrator                     │    │
+│  │  Claude native tool-use + profile adaptation     │    │
+│  └──────┬──────────┬──────────┬──────────┬─────────┘    │
+│  ┌──────┴───┐ ┌────┴────┐ ┌──┴───┐ ┌───┴──────────┐   │
+│  │kanker.nl │ │NKR-Cijf.│ │Atlas │ │Publications  │   │
+│  │ 2816 pgs │ │  Stats  │ │Region│ │  Reports     │   │
+│  └──────────┘ └─────────┘ └──────┘ └──────────────┘   │
+└─────────────────────────────────────────────────────────┘
+```
 
 ## Quick Start
 
-Head to [00-onboarding/](./00-onboarding/) for environment setup and first-run instructions.
+```bash
+# Clone and enter team directory
+cd teams/team5
 
----
+# Copy environment config
+cp .env.example .env
+# Add your ANTHROPIC_API_KEY to .env
 
-## Documentation Map
+# Option 1: Docker (recommended)
+docker compose up
 
-### [00-onboarding/](./00-onboarding/) -- Getting Started
+# Option 2: Local development
+cd backend && uv sync && uv run uvicorn main:app --reload --port 8000
+cd ../frontend && pnpm install && pnpm dev
+```
 
-Setup guides, environment configuration, and first-run instructions.
+- Frontend: http://localhost:3000
+- Backend API docs: http://localhost:8000/docs
 
-### [01-architecture/](./01-architecture/) -- System Architecture
+## Data Sources Connected
 
-Architecture decisions, component diagrams, and data flow documentation.
+| Source | What it provides | How we use it |
+|--------|-----------------|---------------|
+| [kanker.nl](https://kanker.nl) | Patient cancer information (2,816 pages) | RAG vector search via ChromaDB |
+| [NKR-Cijfers](https://nkr-cijfers.iknl.nl) | Cancer registry statistics (1961-2025) | Live API queries for incidence, survival, staging |
+| [Cancer Atlas](https://kankeratlas.iknl.nl) | Regional cancer variation (890 postcodes) | Live API for geographic SIR data |
+| IKNL Publications | 3 reports + 5 scientific papers | RAG vector search via ChromaDB |
 
-### [40-implementation-plans/](./40-implementation-plans/) -- Implementation Plans
+## Key Features
 
-Step-by-step plans for building each part of the system.
-
-### [60-prd/](./60-prd/) -- Product Requirement Documents
-
-Product requirements, user stories, and feature definitions.
-
-### [61-tsd/](./61-tsd/) -- Technical Design Specifications
-
-Detailed technical designs for individual components.
-
-### [success-criteria.md](./success-criteria.md) -- Hackathon Judging Criteria
-
-The four scoring domains: Information Integrity, Usability, Ethics, and Advanced Solution. Maps directly to guardrails in the chat orchestrator.
-
-### [superpowers/specs/](./superpowers/specs/) -- Design Specs
-
-Brainstorming and design exploration documents:
-
-- [cancer-info-chat-design](./superpowers/specs/2026-04-10-cancer-info-chat-design.md) -- End-to-end system design: architecture, chat orchestrator, user profiling, guardrails, and multi-source synthesis.
-- [frontend-stack-design](./superpowers/specs/2026-04-10-frontend-stack-design.md) -- Tech stack rationale, frontend components, SSE streaming, and UI layout.
-- [source-connectors-design](./superpowers/specs/2026-04-10-source-connectors-design.md) -- Connector interface, per-source implementation (kanker.nl, NKR-Cijfers, Cancer Atlas, publications).
-
----
+- **Source provenance on every response** — clickable citations with reliability badges
+- **Profile-adaptive** — tone, source priority, and depth adjust per user type
+- **Inline data visualization** — charts for statistics, color-coded regional data
+- **Ethical guardrails** — declines personal medical advice, redirects to huisarts
+- **Feedback mechanism** — thumbs up/down + "informatie mist?" for IKNL review
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | Next.js 14, TypeScript, Tailwind CSS, Recharts |
-| Backend | FastAPI, Python 3.11+ |
-| LLM | Claude (Anthropic) via LiteLLM, Ollama fallback |
-| Orchestration | Claude native tool-use |
-| Vector store | ChromaDB |
-| Dev tooling | uv, pnpm, Docker Compose |
+Python 3.11 + FastAPI | Next.js 14 + TypeScript + Tailwind | Claude (Anthropic) | ChromaDB | LiteLLM
 
-## Data Sources
+## Team
 
-| Source | Type | Purpose |
-|--------|------|---------|
-| kanker.nl | Vector search (ChromaDB) | Patient-facing cancer information |
-| NKR-Cijfers | REST API | Cancer registry statistics |
-| Cancer Atlas | REST API | Regional cancer data and maps |
-| Publications | PDF/text search | Research papers and reports |
-| Richtlijnendatabase | TBD | Clinical guidelines |
+Team 5 — BrabantHack_26
 
-## Target Groups
+## Documentation
 
-- **Patients and loved ones** -- plain-language answers from kanker.nl
-- **Healthcare professionals** -- clinical data from NKR, publications, guidelines
-- **Policymakers** -- regional comparisons and trend analyses from Cancer Atlas
+See [docs/](./docs/) for full architecture, PRD, TSD, and implementation plans.
