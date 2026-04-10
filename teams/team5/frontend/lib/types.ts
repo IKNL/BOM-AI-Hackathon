@@ -94,3 +94,9 @@ export interface IntakeSummarizeResponse {
   kankersoort: string;
   vraag_type: string;
 }
+
+export interface IntakeAnalyzeResponse {
+  gegevens: GegevensModel;
+  bot_message: string;
+  status: "need_more_info" | "ready_to_search" | "unclear";
+}

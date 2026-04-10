@@ -27,8 +27,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from sse_starlette.sse import EventSourceResponse
 
-from models import ChatRequest, FeedbackEntry, IntakeSummarizeRequest, IntakeSearchRequest
-from intake import summarize_question, search_and_format
+from models import ChatRequest, FeedbackEntry, IntakeSummarizeRequest, IntakeSearchRequest, IntakeAnalyzeRequest
+from intake import summarize_question, search_and_format, analyze_intake
 
 # ---------------------------------------------------------------------------
 # Centralized logging setup
@@ -72,13 +72,25 @@ except ImportError:
 
 
 # ---------------------------------------------------------------------------
-# Configuration
+# Configuration — use config.py Settings which reads .env automatically
 # ---------------------------------------------------------------------------
 
-FEEDBACK_DB_PATH = os.environ.get("FEEDBACK_DB_PATH", "data/feedback.db")
-LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "openrouter")
-LLM_MODEL = os.environ.get("LLM_MODEL", "openai/gpt-4o-mini")
-CHROMADB_PATH = os.environ.get("CHROMADB_PATH", "data/chromadb")
+from config import settings
+
+FEEDBACK_DB_PATH = settings.FEEDBACK_DB_PATH
+LLM_PROVIDER = settings.LLM_PROVIDER
+LLM_MODEL = settings.LLM_MODEL
+CHROMADB_PATH = settings.CHROMADB_PATH
+
+# Ensure API keys are in os.environ so LiteLLM can find them
+if settings.OPENROUTER_API_KEY:
+    os.environ.setdefault("OPENROUTER_API_KEY", settings.OPENROUTER_API_KEY)
+if settings.ANTHROPIC_API_KEY:
+    os.environ.setdefault("ANTHROPIC_API_KEY", settings.ANTHROPIC_API_KEY)
+if settings.OPENAI_API_KEY:
+    os.environ.setdefault("OPENAI_API_KEY", settings.OPENAI_API_KEY)
+if settings.OPENAI_BASE_URL:
+    os.environ.setdefault("OPENAI_BASE_URL", settings.OPENAI_BASE_URL)
 
 # Set model prefix for LiteLLM based on provider
 if LLM_PROVIDER == "openrouter" and not LLM_MODEL.startswith("openrouter/"):
@@ -419,6 +431,24 @@ async def chat_stream(request: ChatRequest):
                 }
 
     return EventSourceResponse(event_generator())
+
+
+@app.post("/api/intake/analyze")
+async def intake_analyze(request: IntakeAnalyzeRequest):
+    """Conversational intake: analyze message, fill gegevensmodel, ask for missing info."""
+    try:
+        result = await analyze_intake(
+            message=request.message,
+            gegevens=request.gegevens,
+            model=LLM_MODEL,
+        )
+        return result.model_dump()
+    except Exception:
+        logger.exception("intake_analyze failed for message=%s", request.message[:100])
+        return JSONResponse(
+            status_code=502,
+            content={"error": "analyze_failed", "message": "Kon het bericht niet verwerken."},
+        )
 
 
 @app.post("/api/intake/summarize")

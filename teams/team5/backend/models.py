@@ -101,6 +101,19 @@ class IntakeSummarizeResponse(BaseModel):
     vraag_type: str   # patient_info | cijfers | regionaal | onderzoek | breed
 
 
+class IntakeAnalyzeRequest(BaseModel):
+    """Request body for /api/intake/analyze — conversational intake."""
+    message: str
+    gegevens: GegevensModel = GegevensModel()
+
+
+class IntakeAnalyzeResponse(BaseModel):
+    """Response from /api/intake/analyze."""
+    gegevens: GegevensModel
+    bot_message: str
+    status: Literal["need_more_info", "ready_to_search", "unclear"]
+
+
 class IntakeSearchRequest(BaseModel):
     """Request body for /api/intake/search."""
     ai_bekendheid: Literal["niet_bekend", "enigszins", "erg_bekend"]

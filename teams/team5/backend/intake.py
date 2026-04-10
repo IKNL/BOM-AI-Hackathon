@@ -14,7 +14,7 @@ from typing import Any
 
 import litellm
 
-from models import IntakeSummarizeResponse, SourceResult
+from models import IntakeSummarizeResponse, IntakeAnalyzeResponse, GegevensModel, SourceResult
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,124 @@ class SSEEvent:
     """A single Server-Sent Event."""
     event: str
     data: str
+
+
+# ---------------------------------------------------------------------------
+# Conversational intake — analyze user message and fill gegevensmodel
+# ---------------------------------------------------------------------------
+
+_ANALYZE_PROMPT = """Je bent een vriendelijke intake-assistent voor de IKNL Infobot (kankerinformatie).
+Je doel is om stap voor stap de volgende gegevens te verzamelen via een natuurlijk gesprek:
+
+1. ai_bekendheid: Hoe bekend is de gebruiker met AI? (niet_bekend / enigszins / erg_bekend)
+2. gebruiker_type: Wat voor type gebruiker? (patient / publiek / zorgverlener / student / beleidsmaker / onderzoeker / journalist / anders)
+3. vraag_tekst: Wat is de eigenlijke vraag van de gebruiker?
+
+Je hebt al deze informatie:
+{huidige_gegevens}
+
+De gebruiker zegt nu: "{bericht}"
+
+Analyseer het bericht en doe het volgende:
+1. Vul alle velden in die je kunt afleiden uit het bericht. Wees slim: als iemand zegt "ik ben arts" → gebruiker_type = "zorgverlener". Als iemand direct een inhoudelijke vraag stelt zonder zich voor te stellen, neem dan aan ai_bekendheid = "enigszins".
+2. Als een kankersoort wordt genoemd, vul kankersoort in.
+3. Classificeer vraag_type als er een vraag is: patient_info / cijfers / regionaal / onderzoek / breed
+4. Bepaal de status:
+   - "ready_to_search" als je minimaal gebruiker_type EN vraag_tekst hebt
+   - "unclear" als het bericht onbegrijpelijk is of niet over kankerinformatie gaat
+   - "need_more_info" als je nog essentiële informatie mist
+5. Schrijf een korte, vriendelijke bot_message:
+   - Bij "need_more_info": vraag naar het BELANGRIJKSTE ontbrekende veld. Geef voorbeelden.
+   - Bij "ready_to_search": geef een samenvatting ter bevestiging: "Als ik het goed begrijp bent u een [type] en zoekt u [samenvatting]. Ik ga nu voor u zoeken."
+   - Bij "unclear": leg uit dat je het niet begrijpt en geef voorbeeldvragen passend bij het gebruikerstype.
+
+BELANGRIJK:
+- Stel MAXIMAAL één vraag per keer
+- Als de gebruiker direct een goede vraag stelt (bijv. "Wat is borstkanker?"), hoef je niet eerst naar ai_bekendheid te vragen — sla die stap over
+- Wees efficiënt: als je genoeg info hebt, ga meteen naar ready_to_search
+- Antwoord in het Nederlands
+- Antwoord ALLEEN in dit JSON-formaat:
+
+{{"gegevens": {{"ai_bekendheid": "...", "gebruiker_type": "...", "vraag_tekst": "...", "kankersoort": "..." of null, "vraag_type": "...", "samenvatting": "...", "bevestigd": false}}, "bot_message": "...", "status": "..."}}"""
+
+
+async def analyze_intake(
+    message: str,
+    gegevens: GegevensModel,
+    model: str,
+) -> IntakeAnalyzeResponse:
+    """Analyze a user message, update the gegevensmodel, return next action."""
+    huidige = []
+    if gegevens.ai_bekendheid:
+        huidige.append(f"- ai_bekendheid: {gegevens.ai_bekendheid}")
+    if gegevens.gebruiker_type:
+        huidige.append(f"- gebruiker_type: {gegevens.gebruiker_type}")
+    if gegevens.vraag_tekst:
+        huidige.append(f"- vraag_tekst: {gegevens.vraag_tekst}")
+    if gegevens.kankersoort:
+        huidige.append(f"- kankersoort: {gegevens.kankersoort}")
+    if gegevens.vraag_type:
+        huidige.append(f"- vraag_type: {gegevens.vraag_type}")
+    huidige_str = "\n".join(huidige) if huidige else "(nog niets ingevuld)"
+
+    prompt = _ANALYZE_PROMPT.format(
+        huidige_gegevens=huidige_str,
+        bericht=message.replace("{", "{{").replace("}", "}}"),
+    )
+
+    try:
+        response = await litellm.acompletion(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2,
+        )
+        raw = response.choices[0].message.content or ""
+    except Exception:
+        logger.exception("LLM analyze call failed")
+        return IntakeAnalyzeResponse(
+            gegevens=gegevens,
+            bot_message="Er is een fout opgetreden. Probeer het opnieuw.",
+            status="need_more_info",
+        )
+
+    try:
+        # Strip markdown code fences if present
+        clean = raw.strip()
+        if clean.startswith("```"):
+            clean = clean.split("\n", 1)[1] if "\n" in clean else clean[3:]
+        if clean.endswith("```"):
+            clean = clean[:-3]
+        clean = clean.strip()
+
+        parsed = json.loads(clean)
+        g = parsed.get("gegevens", {})
+
+        updated = GegevensModel(
+            ai_bekendheid=g.get("ai_bekendheid") or gegevens.ai_bekendheid,
+            gebruiker_type=g.get("gebruiker_type") or gegevens.gebruiker_type,
+            vraag_tekst=g.get("vraag_tekst") or gegevens.vraag_tekst,
+            kankersoort=g.get("kankersoort") if g.get("kankersoort") not in (None, "geen", "null", "") else gegevens.kankersoort,
+            vraag_type=g.get("vraag_type") or gegevens.vraag_type,
+            samenvatting=g.get("samenvatting") or gegevens.samenvatting,
+            bevestigd=g.get("bevestigd", False),
+        )
+
+        status = parsed.get("status", "need_more_info")
+        if status not in ("need_more_info", "ready_to_search", "unclear"):
+            status = "need_more_info"
+
+        return IntakeAnalyzeResponse(
+            gegevens=updated,
+            bot_message=parsed.get("bot_message", "Kunt u dat nader toelichten?"),
+            status=status,
+        )
+    except (json.JSONDecodeError, KeyError, ValueError):
+        logger.warning("LLM returned non-JSON for analyze: %s", raw[:300])
+        return IntakeAnalyzeResponse(
+            gegevens=gegevens,
+            bot_message="Ik begreep dat niet helemaal. Kunt u uw vraag anders formuleren?",
+            status="need_more_info",
+        )
 
 
 _SUMMARIZE_PROMPT_TEMPLATE = """Je bent een intake-assistent. De gebruiker heeft de volgende informatie gegeven:

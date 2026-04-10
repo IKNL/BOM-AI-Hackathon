@@ -1,7 +1,31 @@
-import type { IntakeSummarizeResponse, SSEEvent } from "./types";
+import type { IntakeSummarizeResponse, IntakeAnalyzeResponse, GegevensModel, SSEEvent } from "./types";
 import { logger } from "./logger";
 
 const API_BASE = "";
+
+
+export async function analyzeMessage(
+  message: string,
+  gegevens: GegevensModel
+): Promise<IntakeAnalyzeResponse> {
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}/api/intake/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, gegevens }),
+    });
+  } catch (err) {
+    logger.error("intake-client", "Network error calling /api/intake/analyze", err);
+    throw new Error("Network error: backend onbereikbaar");
+  }
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    logger.error("intake-client", `Analyze failed: HTTP ${response.status}`, body);
+    throw new Error(`Analyze failed: ${response.status}`);
+  }
+  return response.json();
+}
 
 function parseSSELine(line: string): { event?: string; data?: string } | null {
   if (line.startsWith("event:")) return { event: line.slice(6).trim() };
