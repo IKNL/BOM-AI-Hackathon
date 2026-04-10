@@ -25,7 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from sse_starlette.sse import EventSourceResponse
 
-from backend.models import ChatRequest, FeedbackEntry
+from models import ChatRequest, FeedbackEntry
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class _SSEEventStub:
 
 # Try importing from orchestrator; fall back to stubs
 try:
-    from backend.orchestrator import ChatOrchestrator, SSEEvent
+    from orchestrator import ChatOrchestrator, SSEEvent
 except ImportError:
     logger.info(
         "backend.orchestrator not available yet -- using placeholder streaming"
@@ -93,23 +93,23 @@ def _init_connectors() -> list:
     connectors = []
 
     try:
-        from backend.connectors.kanker_nl import KankerNlConnector
+        from connectors.kanker_nl import KankerNLConnector
 
-        connectors.append(KankerNlConnector(chromadb_path=CHROMADB_PATH))
+        connectors.append(KankerNLConnector(chromadb_path=CHROMADB_PATH))
         logger.info("Loaded kanker_nl connector")
     except Exception as exc:
         logger.warning("Could not load kanker_nl connector: %s", exc)
 
     try:
-        from backend.connectors.nkr_cijfers import NkrCijfersConnector
+        from connectors.nkr_cijfers import NKRCijfersConnector
 
-        connectors.append(NkrCijfersConnector())
+        connectors.append(NKRCijfersConnector())
         logger.info("Loaded nkr_cijfers connector")
     except Exception as exc:
         logger.warning("Could not load nkr_cijfers connector: %s", exc)
 
     try:
-        from backend.connectors.cancer_atlas import CancerAtlasConnector
+        from connectors.cancer_atlas import CancerAtlasConnector
 
         connectors.append(CancerAtlasConnector())
         logger.info("Loaded cancer_atlas connector")
@@ -117,7 +117,7 @@ def _init_connectors() -> list:
         logger.warning("Could not load cancer_atlas connector: %s", exc)
 
     try:
-        from backend.connectors.publications import PublicationsConnector
+        from connectors.publications import PublicationsConnector
 
         connectors.append(PublicationsConnector(chromadb_path=CHROMADB_PATH))
         logger.info("Loaded publications connector")

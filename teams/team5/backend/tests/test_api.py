@@ -6,7 +6,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from unittest.mock import MagicMock, patch
 
-from backend.main import SSEEvent, app
+from main import SSEEvent, app
 
 
 # ---------------------------------------------------------------------------
