@@ -24,18 +24,21 @@ def mock_collection():
                 {
                     "source_type": "publication",
                     "title": "Comorbidities and survival in 8 cancers",
+                    "url": "https://doi.org/10.1016/S1470-2045(22)00734-X",
                     "language": "en",
                     "topic": "comorbidities",
                 },
                 {
                     "source_type": "publication",
                     "title": "Ovarian cancer ML prediction",
+                    "url": "https://example.org/ovarian-cancer-ml-prediction",
                     "language": "en",
                     "topic": "ovarian cancer",
                 },
                 {
                     "source_type": "report",
                     "title": "Genderverschillen in kanker",
+                    "url": "https://iknl.nl/vrouw-man-verschillen-bij-kanker",
                     "language": "nl",
                     "topic": "gender differences",
                 },
@@ -93,6 +96,15 @@ class TestPublicationsBasicQuery:
         assert len(result.sources) == 3
         assert all(isinstance(c, Citation) for c in result.sources)
         assert result.sources[0].title == "Comorbidities and survival in 8 cancers"
+        assert result.sources[0].url == "https://doi.org/10.1016/S1470-2045(22)00734-X"
+
+    @pytest.mark.asyncio
+    async def test_basic_query_uses_metadata_url_for_citations(self, connector, mock_collection):
+        result = await search_publications(
+            connector, query="gender differences"
+        )
+
+        assert result.sources[2].url == "https://iknl.nl/vrouw-man-verschillen-bij-kanker"
 
     @pytest.mark.asyncio
     async def test_basic_query_calls_chromadb_without_where(self, connector, mock_collection):
