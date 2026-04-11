@@ -86,6 +86,7 @@ export interface GegevensModel {
   kankersoort: string | null;
   vraag_type: string | null;
   samenvatting: string | null;
+  search_query: string | null;
   bevestigd: boolean;
 }
 
@@ -93,6 +94,7 @@ export interface IntakeSummarizeResponse {
   samenvatting: string;
   kankersoort: string;
   vraag_type: string;
+  search_query: string;
 }
 
 export interface IntakeAnalyzeResponse {
