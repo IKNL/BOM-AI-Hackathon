@@ -17,6 +17,15 @@ services:
       - OPENAI_BASE_URL=${OPENAI_BASE_URL}
       - EMBEDDING_MODEL=${EMBEDDING_MODEL:-intfloat/multilingual-e5-small}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      # Inside the container the volume mount is /app/data, but paths.py
+      # computes REPO_ROOT=/ from /app/..., so the default resolve_repo_path
+      # lands at /data (wrong). Override storage paths explicitly.
+      - CHROMADB_PATH=/app/data/chromadb
+      - FEEDBACK_DB_PATH=/app/data/feedback.db
+      - KANKER_NL_JSON_PATH=/app/data/kanker_nl_pages_all.json
+      - PUBLICATIONS_DIR=/app/data/reports
+      - SCIENTIFIC_PUBLICATIONS_DIR=/app/data/scientific_publications
+      - SITEMAP_PATH=/app/data/sitemap.json
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
