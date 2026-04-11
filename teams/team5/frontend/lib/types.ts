@@ -48,6 +48,8 @@ export interface ErrorEventData {
   message: string;
 }
 
+export type FeedbackCategory = "intent" | "execution" | "info";
+
 export interface FeedbackRequest {
   session_id: string;
   message_id: string;
@@ -55,6 +57,7 @@ export interface FeedbackRequest {
   comment?: string;
   query: string;
   sources_tried: string[];
+  category?: FeedbackCategory;
 }
 
 // Intake flow types
