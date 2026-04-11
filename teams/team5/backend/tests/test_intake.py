@@ -170,6 +170,7 @@ class TestSearchAndFormat:
                 samenvatting="U zoekt informatie over borstkanker.",
                 vraag_type="patient_info",
                 kankersoort="borstkanker",
+                search_query="wat is borstkanker",
                 connectors=connectors,
                 model="test-model",
             ):
@@ -179,6 +180,54 @@ class TestSearchAndFormat:
         assert "source_card" in event_types
         assert "token" in event_types
         assert "done" in event_types
+
+    @pytest.mark.asyncio
+    async def test_search_and_format_uses_search_query_for_vector_connectors(self):
+        """kanker_nl and publications must receive search_query, not vraag_tekst."""
+        mock_kanker = MagicMock()
+        mock_kanker.name = "kanker_nl"
+        mock_kanker.query = AsyncMock(
+            return_value=SourceResult(
+                data={},
+                summary="",
+                sources=[],
+                visualizable=False,
+            )
+        )
+
+        mock_publications = MagicMock()
+        mock_publications.name = "publications"
+        mock_publications.query = AsyncMock(
+            return_value=SourceResult(
+                data={},
+                summary="",
+                sources=[],
+                visualizable=False,
+            )
+        )
+
+        connectors = {"kanker_nl": mock_kanker, "publications": mock_publications}
+
+        events = []
+        async for event in search_and_format(
+            ai_bekendheid="enigszins",
+            gebruiker_type="onderzoeker",
+            vraag_tekst="De gebruiker zoekt naar recente innovaties in kankeronderzoek",
+            samenvatting="U zoekt recente innovaties.",
+            vraag_type="onderzoek",
+            kankersoort=None,
+            search_query="welke recente innovaties zijn er in het kankeronderzoek",
+            connectors=connectors,
+            model="test-model",
+        ):
+            events.append(event)
+
+        # Assert connectors were called with search_query, not vraag_tekst
+        kanker_call_kwargs = mock_kanker.query.call_args.kwargs
+        assert kanker_call_kwargs["query"] == "welke recente innovaties zijn er in het kankeronderzoek"
+
+        pub_call_kwargs = mock_publications.query.call_args.kwargs
+        assert pub_call_kwargs["query"] == "welke recente innovaties zijn er in het kankeronderzoek"
 
 
 from httpx import ASGITransport, AsyncClient
