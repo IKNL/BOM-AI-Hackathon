@@ -311,6 +311,7 @@ async def search_and_format(
     samenvatting: str,
     vraag_type: str | None,
     kankersoort: str | None,
+    search_query: str,
     connectors: dict[str, Any],
     model: str,
 ):
@@ -332,7 +333,7 @@ async def search_and_format(
         try:
             query_params: dict[str, Any] = {}
             if connector_name in ("kanker_nl", "publications"):
-                query_params["query"] = vraag_tekst
+                query_params["query"] = search_query
             if kanker_filter:
                 if connector_name == "kanker_nl":
                     query_params["kankersoort"] = kanker_filter
