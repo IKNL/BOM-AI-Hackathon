@@ -300,8 +300,8 @@ async def _store_feedback(db_path: str, entry: FeedbackEntry) -> str:
             """
             INSERT INTO feedback
                 (id, session_id, message_id, rating, comment,
-                 query, sources_tried, profile, timestamp)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 query, sources_tried, profile, category, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 feedback_id,
@@ -312,6 +312,7 @@ async def _store_feedback(db_path: str, entry: FeedbackEntry) -> str:
                 entry.query,
                 json.dumps(entry.sources_tried),
                 entry.profile,
+                entry.category,
                 timestamp,
             ),
         )

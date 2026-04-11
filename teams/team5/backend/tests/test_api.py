@@ -147,6 +147,58 @@ class TestFeedbackEndpoint:
             assert response.status_code == 201
 
     @pytest.mark.asyncio
+    async def test_feedback_persists_category(self, tmp_path):
+        """Negative feedback with a category should persist it to the database."""
+        import aiosqlite
+
+        db_path = str(tmp_path / "test_feedback.db")
+        with patch("main.FEEDBACK_DB_PATH", db_path):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                payload = {
+                    "session_id": "sess-cat",
+                    "message_id": "msg-cat",
+                    "rating": "negative",
+                    "category": "intent",
+                    "comment": "verkeerd begrepen",
+                    "query": "Wat is borstkanker?",
+                    "sources_tried": ["kanker_nl"],
+                }
+                response = await client.post("/api/feedback", json=payload)
+
+            assert response.status_code == 201
+
+        async with aiosqlite.connect(db_path) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute(
+                "SELECT category FROM feedback WHERE session_id = ?",
+                ("sess-cat",),
+            ) as cursor:
+                row = await cursor.fetchone()
+
+        assert row is not None
+        assert row["category"] == "intent"
+
+    @pytest.mark.asyncio
+    async def test_feedback_rejects_invalid_category(self, tmp_path):
+        """Invalid category values should 422."""
+        db_path = str(tmp_path / "test_feedback.db")
+        with patch("main.FEEDBACK_DB_PATH", db_path):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                payload = {
+                    "session_id": "sess-bad",
+                    "message_id": "msg-bad",
+                    "rating": "negative",
+                    "category": "garbage",
+                    "query": "q",
+                    "sources_tried": [],
+                }
+                response = await client.post("/api/feedback", json=payload)
+
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
     async def test_feedback_export_returns_csv(self, tmp_path):
         """GET /api/feedback/export should return CSV data."""
         db_path = str(tmp_path / "test_feedback.db")
