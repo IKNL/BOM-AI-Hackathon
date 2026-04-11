@@ -252,7 +252,12 @@ _VRAAG_TYPE_CONNECTORS: dict[str, set[str]] = {
     "patient_info": {"kanker_nl", "publications"},
     "cijfers":      {"nkr_cijfers", "kanker_nl"},
     "regionaal":    {"cancer_atlas", "nkr_cijfers"},
-    "onderzoek":    {"publications", "nkr_cijfers"},
+    # "onderzoek" used to be {publications, nkr_cijfers}. nkr_cijfers needs a
+    # specific cancer_type (useless for generic research queries) and if the
+    # publications collection is missing/rebuilding we ended up with zero
+    # sources. kanker_nl has useful research-adjacent content so keep it as a
+    # fallback.
+    "onderzoek":    {"publications", "kanker_nl", "nkr_cijfers"},
     "breed":        {"kanker_nl", "nkr_cijfers", "cancer_atlas", "publications"},
 }
 

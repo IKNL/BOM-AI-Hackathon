@@ -37,13 +37,32 @@ class PublicationsConnector(SourceConnector):
 
     def __init__(self, chromadb_path: str = "data/chromadb") -> None:
         from connectors.embeddings import get_embedding_function
-        client = chromadb.PersistentClient(path=resolve_repo_path(chromadb_path))
-        self._collection = client.get_collection(name=COLLECTION_NAME, embedding_function=get_embedding_function())
-        logger.info(
-            "PublicationsConnector initialised with collection '%s' (%d documents)",
-            COLLECTION_NAME,
-            self._collection.count(),
-        )
+        self._chromadb_path = resolve_repo_path(chromadb_path)
+        self._embedding_function = get_embedding_function()
+        self._client = chromadb.PersistentClient(path=self._chromadb_path)
+        self._collection = None
+        self._resolve_collection()
+
+    def _resolve_collection(self) -> None:
+        """(Re)bind the collection handle. Tolerates the collection being
+        missing or rebuilt while the backend is running."""
+        try:
+            self._collection = self._client.get_collection(
+                name=COLLECTION_NAME,
+                embedding_function=self._embedding_function,
+            )
+            logger.info(
+                "PublicationsConnector bound to '%s' (%d documents)",
+                COLLECTION_NAME,
+                self._collection.count(),
+            )
+        except Exception as exc:
+            self._collection = None
+            logger.warning(
+                "PublicationsConnector could not bind to '%s': %s",
+                COLLECTION_NAME,
+                exc,
+            )
 
     async def query(self, **params) -> SourceResult:
         """Dispatch to search_publications with the given params."""
@@ -79,6 +98,18 @@ async def search_publications(
         and citations to document titles.
     """
     try:
+        # Re-bind lazily if the collection wasn't available at startup
+        # (e.g. ingestion hadn't run yet, or is rebuilding right now).
+        if connector._collection is None:
+            connector._resolve_collection()
+        if connector._collection is None:
+            return SourceResult(
+                data=[],
+                summary="De publicatiedatabase is op dit moment niet beschikbaar.",
+                sources=[],
+                visualizable=False,
+            )
+
         # Build query kwargs
         query_kwargs: dict = {
             "query_texts": [query],
@@ -90,7 +121,23 @@ async def search_publications(
         if where_clause is not None:
             query_kwargs["where"] = where_clause
 
-        results = connector._collection.query(**query_kwargs)
+        try:
+            results = connector._collection.query(**query_kwargs)
+        except Exception as inner_exc:
+            # The collection may have been deleted/rebuilt under us. Try once more.
+            logger.warning(
+                "Publications query failed (%s), re-resolving collection and retrying",
+                inner_exc,
+            )
+            connector._resolve_collection()
+            if connector._collection is None:
+                return SourceResult(
+                    data=[],
+                    summary="De publicatiedatabase is op dit moment niet beschikbaar.",
+                    sources=[],
+                    visualizable=False,
+                )
+            results = connector._collection.query(**query_kwargs)
 
         # Extract documents and metadata
         documents = results["documents"][0] if results["documents"][0] else []
