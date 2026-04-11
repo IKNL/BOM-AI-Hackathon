@@ -281,3 +281,14 @@ class TestFeedbackEntryCategory:
                 sources_tried=[],
                 category="garbage",
             )
+
+    def test_rejects_category_on_positive_rating(self):
+        with pytest.raises(ValidationError):
+            FeedbackEntry(
+                session_id="s1",
+                message_id="m1",
+                rating="positive",
+                query="q",
+                sources_tried=[],
+                category="intent",
+            )

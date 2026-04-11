@@ -57,6 +57,12 @@ class FeedbackEntry(BaseModel):
             self.timestamp = datetime.now(timezone.utc)
         return self
 
+    @model_validator(mode="after")
+    def category_only_for_negative(self) -> "FeedbackEntry":
+        if self.rating == "positive" and self.category is not None:
+            raise ValueError("category is only valid for negative feedback")
+        return self
+
 
 class SourceResult(BaseModel):
     data: dict | list | str | None

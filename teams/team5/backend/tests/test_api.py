@@ -99,7 +99,7 @@ class TestFeedbackEndpoint:
     async def test_feedback_stores_and_returns_id(self, tmp_path):
         """POST /api/feedback should store feedback and return an ID."""
         with patch(
-            "backend.main.FEEDBACK_DB_PATH",
+            "main.FEEDBACK_DB_PATH",
             str(tmp_path / "test_feedback.db"),
         ):
             transport = ASGITransport(app=app)
@@ -126,7 +126,7 @@ class TestFeedbackEndpoint:
     async def test_feedback_negative_rating(self, tmp_path):
         """Negative feedback should also be stored."""
         with patch(
-            "backend.main.FEEDBACK_DB_PATH",
+            "main.FEEDBACK_DB_PATH",
             str(tmp_path / "test_feedback.db"),
         ):
             transport = ASGITransport(app=app)
@@ -217,14 +217,19 @@ class TestFeedbackEndpoint:
 
             assert response.status_code == 200
             body = response.text
-            assert "category" in body
-            assert "execution" in body
+
+            import csv, io
+            reader = csv.DictReader(io.StringIO(body))
+            rows = list(reader)
+            assert len(rows) == 1
+            assert rows[0]["category"] == "execution"
+            assert rows[0]["session_id"] == "sess-exp"
 
     @pytest.mark.asyncio
     async def test_feedback_export_returns_csv(self, tmp_path):
         """GET /api/feedback/export should return CSV data."""
         db_path = str(tmp_path / "test_feedback.db")
-        with patch("backend.main.FEEDBACK_DB_PATH", db_path):
+        with patch("main.FEEDBACK_DB_PATH", db_path):
             transport = ASGITransport(app=app)
             async with AsyncClient(
                 transport=transport, base_url="http://test"
@@ -315,7 +320,7 @@ class TestChatStreamEndpoint:
 
         # Override the orchestrator dependency
         with patch(
-            "backend.main._create_orchestrator",
+            "main._create_orchestrator",
             return_value=mock_orchestrator,
         ):
             transport = ASGITransport(app=app)

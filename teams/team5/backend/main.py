@@ -355,7 +355,7 @@ async def _export_feedback_csv(db_path: str) -> str:
                 row["session_id"],
                 row["message_id"],
                 row["rating"],
-                row["category"] if "category" in row.keys() else None,
+                row["category"],
                 row["comment"],
                 row["query"],
                 row["sources_tried"],
