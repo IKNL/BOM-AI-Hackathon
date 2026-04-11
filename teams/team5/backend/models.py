@@ -82,6 +82,7 @@ class GegevensModel(BaseModel):
     kankersoort: str | None = None
     vraag_type: str | None = None
     samenvatting: str | None = None
+    search_query: str | None = None
     bevestigd: bool = False
 
 
@@ -99,6 +100,7 @@ class IntakeSummarizeResponse(BaseModel):
     samenvatting: str
     kankersoort: str  # "geen" if not mentioned
     vraag_type: str   # patient_info | cijfers | regionaal | onderzoek | breed
+    search_query: str  # clean topical query for vector search
 
 
 class IntakeAnalyzeRequest(BaseModel):
@@ -126,3 +128,4 @@ class IntakeSearchRequest(BaseModel):
     kankersoort: str | None = None
     vraag_type: str | None = None
     samenvatting: str
+    search_query: str
