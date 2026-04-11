@@ -84,6 +84,7 @@ Analyseer de vraag:
 2. Wordt er een specifiek type aandoening genoemd? (kankersoort — alleen als EXPLICIET genoemd)
 3. Welk type informatie zoeken ze? (vraag_type: patient_info / cijfers / regionaal / onderzoek / breed)
 4. Schrijf een korte samenvatting (samenvatting)
+5. Schrijf een korte, natuurlijke zoekvraag (search_query) die geschikt is voor semantische vectorzoekopdrachten. Gebruik ALLEEN de onderliggende vraag (bijvoorbeeld: "welke recente innovaties zijn er in het kankeronderzoek?"). Schrijf NOOIT meta-tekst zoals "de gebruiker zoekt naar..." of "ik wil graag weten". Maximaal 15 woorden.
 
 Als de vraag DUIDELIJK genoeg is om mee te zoeken:
 - Vul alle velden in
@@ -102,7 +103,7 @@ Als de vraag BUITEN SCOPE valt (niet over kanker, gezondheid of IKNL-bronnen):
 - Laat alle andere velden op null
 
 Antwoord ALLEEN in JSON:
-{{"vraag_tekst": "..." of null, "kankersoort": "..." of null, "vraag_type": "..." of null, "samenvatting": "..." of null, "scope": "in_scope" of "off_topic", "bot_message": "..."}}
+{{"vraag_tekst": "..." of null, "kankersoort": "..." of null, "vraag_type": "..." of null, "samenvatting": "..." of null, "search_query": "..." of null, "scope": "in_scope" of "off_topic", "bot_message": "..."}}
 
 TOON: {tone}. STIJL: {style}""",
 
@@ -264,6 +265,14 @@ async def vraag_node(state: dict) -> dict:
         g["vraag_type"] = result["vraag_type"]
     if result.get("samenvatting"):
         g["samenvatting"] = result["samenvatting"]
+
+    # Safety net against LLM drift: search_query must never be empty when
+    # we have a vraag_tekst, so fall back to vraag_tekst if missing/empty.
+    raw_search_query = (result.get("search_query") or "").strip()
+    if raw_search_query:
+        g["search_query"] = raw_search_query
+    elif g.get("vraag_tekst"):
+        g["search_query"] = g["vraag_tekst"]
 
     return {**state, "gegevens": g, "bot_message": result.get("bot_message", ""), "off_topic": False}
 
