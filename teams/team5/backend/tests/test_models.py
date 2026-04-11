@@ -225,3 +225,59 @@ class TestIntakeSearchRequest:
                 vraag_tekst="test",
                 samenvatting="test",
             )
+
+
+class TestFeedbackEntryCategory:
+    def test_accepts_intent_category(self):
+        entry = FeedbackEntry(
+            session_id="s1",
+            message_id="m1",
+            rating="negative",
+            query="Wat is borstkanker?",
+            sources_tried=["kanker_nl"],
+            category="intent",
+        )
+        assert entry.category == "intent"
+
+    def test_accepts_execution_category(self):
+        entry = FeedbackEntry(
+            session_id="s1",
+            message_id="m1",
+            rating="negative",
+            query="q",
+            sources_tried=[],
+            category="execution",
+        )
+        assert entry.category == "execution"
+
+    def test_accepts_info_category(self):
+        entry = FeedbackEntry(
+            session_id="s1",
+            message_id="m1",
+            rating="negative",
+            query="q",
+            sources_tried=[],
+            category="info",
+        )
+        assert entry.category == "info"
+
+    def test_category_defaults_to_none(self):
+        entry = FeedbackEntry(
+            session_id="s1",
+            message_id="m1",
+            rating="positive",
+            query="q",
+            sources_tried=[],
+        )
+        assert entry.category is None
+
+    def test_rejects_invalid_category(self):
+        with pytest.raises(ValidationError):
+            FeedbackEntry(
+                session_id="s1",
+                message_id="m1",
+                rating="negative",
+                query="q",
+                sources_tried=[],
+                category="garbage",
+            )

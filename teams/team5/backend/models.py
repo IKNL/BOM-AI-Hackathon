@@ -48,6 +48,7 @@ class FeedbackEntry(BaseModel):
     query: str
     sources_tried: list[str]
     profile: Optional[str] = None
+    category: Optional[Literal["intent", "execution", "info"]] = None
     timestamp: Optional[datetime] = None
 
     @model_validator(mode="after")
