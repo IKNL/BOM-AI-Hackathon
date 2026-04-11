@@ -4,6 +4,7 @@
 
 import React, { useState } from "react";
 import { submitFeedback } from "@/lib/chat-client";
+import type { FeedbackCategory } from "@/lib/types";
 
 interface FeedbackWidgetProps {
   sessionId: string;
@@ -12,6 +13,21 @@ interface FeedbackWidgetProps {
   sourcesTried: string[];
 }
 
+const CATEGORY_OPTIONS: { value: FeedbackCategory; label: string }[] = [
+  {
+    value: "intent",
+    label: "U heeft mijn vraag verkeerd begrepen",
+  },
+  {
+    value: "execution",
+    label: "De juiste vraag, maar op de verkeerde plek gezocht",
+  },
+  {
+    value: "info",
+    label: "De informatie zelf klopt niet",
+  },
+];
+
 export default function FeedbackWidget({
   sessionId,
   messageId,
@@ -19,17 +35,19 @@ export default function FeedbackWidget({
   sourcesTried,
 }: FeedbackWidgetProps) {
   const [rating, setRating] = useState<"positive" | "negative" | null>(null);
-  const [showComment, setShowComment] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
+  const [category, setCategory] = useState<FeedbackCategory | null>(null);
   const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const handleRate = async (value: "positive" | "negative") => {
-    setRating(value);
+  const handleThumbsUp = async () => {
+    setRating("positive");
+    setSubmitted(true);
     try {
       await submitFeedback({
         session_id: sessionId,
         message_id: messageId,
-        rating: value,
+        rating: "positive",
         query,
         sources_tried: sourcesTried,
       });
@@ -38,15 +56,21 @@ export default function FeedbackWidget({
     }
   };
 
-  const handleCommentSubmit = async () => {
-    if (!comment.trim()) return;
+  const handleThumbsDown = () => {
+    setRating("negative");
+    setShowPanel(true);
+  };
+
+  const handleSubmitNegative = async () => {
+    if (!category) return;
     setSubmitted(true);
     try {
       await submitFeedback({
         session_id: sessionId,
         message_id: messageId,
-        rating: rating || "negative",
-        comment: comment.trim(),
+        rating: "negative",
+        category,
+        comment: comment.trim() || undefined,
         query,
         sources_tried: sourcesTried,
       });
@@ -56,11 +80,10 @@ export default function FeedbackWidget({
   };
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        {/* Thumbs up */}
         <button
-          onClick={() => handleRate("positive")}
+          onClick={handleThumbsUp}
           disabled={rating !== null}
           className={`p-1 rounded transition-colors ${
             rating === "positive"
@@ -74,9 +97,8 @@ export default function FeedbackWidget({
           </svg>
         </button>
 
-        {/* Thumbs down */}
         <button
-          onClick={() => handleRate("negative")}
+          onClick={handleThumbsDown}
           disabled={rating !== null}
           className={`p-1 rounded transition-colors ${
             rating === "negative"
@@ -94,16 +116,6 @@ export default function FeedbackWidget({
           </svg>
         </button>
 
-        {/* Missing info link */}
-        {!showComment && !submitted && (
-          <button
-            onClick={() => setShowComment(true)}
-            className="text-xs text-gray-400 hover:text-gray-600 ml-1 transition-colors"
-          >
-            Informatie mist?
-          </button>
-        )}
-
         {submitted && (
           <span className="text-xs text-green-600 ml-1">
             Bedankt voor uw feedback!
@@ -111,23 +123,35 @@ export default function FeedbackWidget({
         )}
       </div>
 
-      {/* Comment input */}
-      {showComment && !submitted && (
-        <div className="flex gap-2">
-          <input
-            type="text"
+      {showPanel && !submitted && (
+        <div className="flex flex-col gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <p className="text-xs font-medium text-gray-700">Wat ging er mis?</p>
+          <div className="flex flex-wrap gap-2">
+            {CATEGORY_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setCategory(opt.value)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  category === opt.value
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleCommentSubmit();
-            }}
-            placeholder="Welke informatie mist u?"
-            className="flex-1 text-xs px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="Kunt u dit toelichten? (optioneel)"
+            rows={2}
+            className="text-xs px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
           />
           <button
-            onClick={handleCommentSubmit}
-            disabled={!comment.trim()}
-            className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            onClick={handleSubmitNegative}
+            disabled={!category}
+            className="self-end text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Verstuur
           </button>
