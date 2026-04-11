@@ -39,10 +39,11 @@ export default function FeedbackWidget({
   const [category, setCategory] = useState<FeedbackCategory | null>(null);
   const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleThumbsUp = async () => {
     setRating("positive");
-    setSubmitted(true);
+    setError(null);
     try {
       await submitFeedback({
         session_id: sessionId,
@@ -51,8 +52,10 @@ export default function FeedbackWidget({
         query,
         sources_tried: sourcesTried,
       });
+      setSubmitted(true);
     } catch {
-      // Silently fail feedback — non-critical
+      setError("Versturen mislukt, probeer opnieuw");
+      setRating(null); // let them retry
     }
   };
 
@@ -63,7 +66,7 @@ export default function FeedbackWidget({
 
   const handleSubmitNegative = async () => {
     if (!category) return;
-    setSubmitted(true);
+    setError(null);
     try {
       await submitFeedback({
         session_id: sessionId,
@@ -74,15 +77,26 @@ export default function FeedbackWidget({
         query,
         sources_tried: sourcesTried,
       });
+      setSubmitted(true);
     } catch {
-      // Silently fail
+      setError("Versturen mislukt, probeer opnieuw");
+      // Keep the panel open so they can retry
     }
+  };
+
+  const handleCancel = () => {
+    setRating(null);
+    setShowPanel(false);
+    setCategory(null);
+    setComment("");
+    setError(null);
   };
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <button
+          type="button"
           onClick={handleThumbsUp}
           disabled={rating !== null}
           className={`p-1 rounded transition-colors ${
@@ -98,6 +112,7 @@ export default function FeedbackWidget({
         </button>
 
         <button
+          type="button"
           onClick={handleThumbsDown}
           disabled={rating !== null}
           className={`p-1 rounded transition-colors ${
@@ -121,15 +136,27 @@ export default function FeedbackWidget({
             Bedankt voor uw feedback!
           </span>
         )}
+        {error && !showPanel && (
+          <span className="text-xs text-red-600 ml-1">{error}</span>
+        )}
       </div>
 
       {showPanel && !submitted && (
-        <div className="flex flex-col gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-          <p className="text-xs font-medium text-gray-700">Wat ging er mis?</p>
-          <div className="flex flex-wrap gap-2">
+        <div
+          role="group"
+          aria-labelledby="feedback-panel-heading"
+          className="flex flex-col gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg"
+        >
+          <p id="feedback-panel-heading" className="text-xs font-medium text-gray-700">
+            Wat ging er mis?
+          </p>
+          <div role="radiogroup" aria-labelledby="feedback-panel-heading" className="flex flex-wrap gap-2">
             {CATEGORY_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
+                type="button"
+                role="radio"
+                aria-checked={category === opt.value}
                 onClick={() => setCategory(opt.value)}
                 className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                   category === opt.value
@@ -148,13 +175,26 @@ export default function FeedbackWidget({
             rows={2}
             className="text-xs px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
           />
-          <button
-            onClick={handleSubmitNegative}
-            disabled={!category}
-            className="self-end text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Verstuur
-          </button>
+          {error && (
+            <span className="text-xs text-red-600">{error}</span>
+          )}
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Annuleer
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmitNegative}
+              disabled={!category}
+              className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Verstuur
+            </button>
+          </div>
         </div>
       )}
     </div>
