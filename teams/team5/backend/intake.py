@@ -177,7 +177,7 @@ _SUMMARIZE_PROMPT_TEMPLATE = """Je bent een intake-assistent. De gebruiker heeft
 - Type gebruiker: {gebruiker_type}
 - Vraag: {vraag_tekst}
 
-Doe drie dingen:
+Doe vier dingen:
 1. Schrijf een korte, natuurlijke samenvatting van wat de gebruiker zoekt (max 2 zinnen).
 2. Als de gebruiker een specifiek type kanker noemt, geef die naam terug als "kankersoort". Zo niet, antwoord "geen". Vraag NOOIT zelf naar een kankersoort.
 3. Classificeer welk type informatie de gebruiker zoekt als "vraag_type". Kies uit:
@@ -186,9 +186,10 @@ Doe drie dingen:
    - "regionaal" — regionale verschillen, gebiedsvergelijking
    - "onderzoek" — wetenschappelijke publicaties, rapporten, studies
    - "breed" — combinatie of onduidelijk
+4. Schrijf een korte, natuurlijke zoekvraag (search_query) die geschikt is voor semantische vectorzoekopdrachten. Gebruik ALLEEN de onderliggende vraag (bijvoorbeeld: "welke recente innovaties zijn er in het kankeronderzoek?"). Schrijf NOOIT meta-tekst zoals "de gebruiker zoekt naar..." of "ik wil graag weten". Maximaal 15 woorden.
 
 Antwoord in JSON:
-{{"samenvatting": "...", "kankersoort": "..." of "geen", "vraag_type": "..."}}"""
+{{"samenvatting": "...", "kankersoort": "..." of "geen", "vraag_type": "...", "search_query": "..."}}"""
 
 
 async def summarize_question(
@@ -215,14 +216,17 @@ async def summarize_question(
             samenvatting=vraag_tekst,
             kankersoort="geen",
             vraag_type="breed",
+            search_query=vraag_tekst,
         )
 
     try:
         parsed = json.loads(raw)
+        raw_search_query = (parsed.get("search_query") or "").strip()
         return IntakeSummarizeResponse(
             samenvatting=parsed.get("samenvatting", vraag_tekst),
             kankersoort=parsed.get("kankersoort", "geen"),
             vraag_type=parsed.get("vraag_type", "breed"),
+            search_query=raw_search_query or vraag_tekst,
         )
     except (json.JSONDecodeError, KeyError):
         logger.warning("LLM returned non-JSON for summarize: %s", raw[:200])
@@ -230,6 +234,7 @@ async def summarize_question(
             samenvatting=vraag_tekst,
             kankersoort="geen",
             vraag_type="breed",
+            search_query=vraag_tekst,
         )
 
 
