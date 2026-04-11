@@ -23,6 +23,7 @@ const INITIAL_GEGEVENS: GegevensModel = {
   kankersoort: null,
   vraag_type: null,
   samenvatting: null,
+  search_query: null,
   bevestigd: false,
 };
 
@@ -167,6 +168,7 @@ export default function ChatPage() {
         ...prev,
         vraag_tekst: null,
         samenvatting: null,
+        search_query: null,
         vraag_type: null,
         bevestigd: false,
       }));
@@ -193,6 +195,7 @@ export default function ChatPage() {
         kankersoort: g.kankersoort,
         vraag_type: g.vraag_type,
         samenvatting: g.samenvatting || g.vraag_tekst || "",
+        search_query: g.search_query || g.vraag_tekst || "",
       });
 
       for await (const event of stream) {
@@ -252,6 +255,7 @@ export default function ChatPage() {
       kankersoort: null,
       vraag_type: null,
       samenvatting: null,
+      search_query: null,
       bevestigd: false,
     }));
     addBotMessage("Stel gerust een nieuwe vraag.");
@@ -415,7 +419,7 @@ export default function ChatPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setGegevens((prev) => ({ ...prev, vraag_tekst: null, samenvatting: null, vraag_type: null }));
+                    setGegevens((prev) => ({ ...prev, vraag_tekst: null, samenvatting: null, vraag_type: null, search_query: null }));
                     addBotMessage("Stel gerust een nieuwe vraag over kanker of gezondheid.");
                     setFlowState("CHAT");
                   }}
