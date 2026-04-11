@@ -199,6 +199,28 @@ class TestFeedbackEndpoint:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
+    async def test_feedback_export_includes_category(self, tmp_path):
+        """CSV export should include the category column and the stored value."""
+        db_path = str(tmp_path / "test_feedback.db")
+        with patch("main.FEEDBACK_DB_PATH", db_path):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                await client.post("/api/feedback", json={
+                    "session_id": "sess-exp",
+                    "message_id": "msg-exp",
+                    "rating": "negative",
+                    "category": "execution",
+                    "query": "q",
+                    "sources_tried": ["publications"],
+                })
+                response = await client.get("/api/feedback/export")
+
+            assert response.status_code == 200
+            body = response.text
+            assert "category" in body
+            assert "execution" in body
+
+    @pytest.mark.asyncio
     async def test_feedback_export_returns_csv(self, tmp_path):
         """GET /api/feedback/export should return CSV data."""
         db_path = str(tmp_path / "test_feedback.db")
