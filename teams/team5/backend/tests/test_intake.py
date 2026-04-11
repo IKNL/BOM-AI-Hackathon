@@ -19,6 +19,7 @@ class TestSummarizeQuestion:
                         "samenvatting": "U zoekt informatie over borstkanker.",
                         "kankersoort": "borstkanker",
                         "vraag_type": "patient_info",
+                        "search_query": "wat is borstkanker",
                     })
                 )
             )
@@ -35,6 +36,31 @@ class TestSummarizeQuestion:
         assert result.samenvatting == "U zoekt informatie over borstkanker."
         assert result.kankersoort == "borstkanker"
         assert result.vraag_type == "patient_info"
+        assert result.search_query == "wat is borstkanker"
+
+    @pytest.mark.asyncio
+    async def test_search_query_falls_back_to_vraag_tekst_when_missing(self):
+        mock_response = AsyncMock()
+        mock_response.choices = [
+            AsyncMock(
+                message=AsyncMock(
+                    content=json.dumps({
+                        "samenvatting": "U zoekt informatie over borstkanker.",
+                        "kankersoort": "borstkanker",
+                        "vraag_type": "patient_info",
+                    })
+                )
+            )
+        ]
+
+        with patch("intake.litellm.acompletion", return_value=mock_response):
+            result = await summarize_question(
+                gebruiker_type="patient",
+                vraag_tekst="Wat is borstkanker?",
+                model="test-model",
+            )
+
+        assert result.search_query == "Wat is borstkanker?"
 
     @pytest.mark.asyncio
     async def test_handles_geen_kankersoort(self):
@@ -46,6 +72,7 @@ class TestSummarizeQuestion:
                         "samenvatting": "U zoekt algemene informatie over kanker.",
                         "kankersoort": "geen",
                         "vraag_type": "breed",
+                        "search_query": "wat doet IKNL",
                     })
                 )
             )
@@ -168,6 +195,7 @@ class TestIntakeEndpoints:
                         "samenvatting": "U zoekt informatie over borstkanker.",
                         "kankersoort": "borstkanker",
                         "vraag_type": "patient_info",
+                        "search_query": "wat is borstkanker",
                     })
                 )
             )
@@ -188,6 +216,7 @@ class TestIntakeEndpoints:
         assert "samenvatting" in data
         assert "kankersoort" in data
         assert "vraag_type" in data
+        assert "search_query" in data
 
     @pytest.mark.asyncio
     async def test_summarize_invalid_type(self):
