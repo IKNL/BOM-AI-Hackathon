@@ -178,6 +178,56 @@ class TestFeedbackEndpoint:
             assert "sess-001" in content
 
 
+class TestFeedbackSchemaMigration:
+    @pytest.mark.asyncio
+    async def test_ensure_feedback_table_adds_category_column(self, tmp_path):
+        """_ensure_feedback_table must add the category column on an existing table
+        that was created without it (simulates upgrading an old database)."""
+        import aiosqlite
+        from main import _ensure_feedback_table
+
+        db_path = str(tmp_path / "legacy.db")
+
+        # Create the legacy schema (no category column)
+        async with aiosqlite.connect(db_path) as db:
+            await db.execute(
+                """
+                CREATE TABLE feedback (
+                    id TEXT PRIMARY KEY,
+                    session_id TEXT NOT NULL,
+                    message_id TEXT NOT NULL,
+                    rating TEXT NOT NULL,
+                    comment TEXT,
+                    query TEXT NOT NULL,
+                    sources_tried TEXT NOT NULL,
+                    profile TEXT,
+                    timestamp TEXT NOT NULL
+                )
+                """
+            )
+            await db.commit()
+
+        # Run the migration
+        await _ensure_feedback_table(db_path)
+
+        # Verify the column now exists
+        async with aiosqlite.connect(db_path) as db:
+            async with db.execute("PRAGMA table_info(feedback)") as cursor:
+                cols = [row[1] for row in await cursor.fetchall()]
+
+        assert "category" in cols
+
+    @pytest.mark.asyncio
+    async def test_ensure_feedback_table_is_idempotent(self, tmp_path):
+        """Running _ensure_feedback_table twice on the same database must not raise."""
+        from main import _ensure_feedback_table
+
+        db_path = str(tmp_path / "idempotent.db")
+        await _ensure_feedback_table(db_path)
+        # Second call should be a no-op, not a failure
+        await _ensure_feedback_table(db_path)
+
+
 # ---------------------------------------------------------------------------
 # Tests: Chat stream endpoint
 # ---------------------------------------------------------------------------

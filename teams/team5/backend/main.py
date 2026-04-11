@@ -260,7 +260,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 async def _ensure_feedback_table(db_path: str) -> None:
-    """Create the feedback table if it does not exist."""
+    """Create the feedback table if it does not exist, and run migrations."""
     os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
     async with aiosqlite.connect(db_path) as db:
         await db.execute(
@@ -274,10 +274,17 @@ async def _ensure_feedback_table(db_path: str) -> None:
                 query TEXT NOT NULL,
                 sources_tried TEXT NOT NULL,
                 profile TEXT,
+                category TEXT,
                 timestamp TEXT NOT NULL
             )
         """
         )
+        # Idempotent migration for pre-existing databases that lack `category`.
+        try:
+            await db.execute("ALTER TABLE feedback ADD COLUMN category TEXT")
+        except aiosqlite.OperationalError:
+            # Column already exists — fresh database or previous migration ran.
+            pass
         await db.commit()
 
 
