@@ -64,6 +64,7 @@ export async function* searchAndStream(request: {
   kankersoort: string | null;
   vraag_type: string | null;
   samenvatting: string;
+  search_query: string;
 }): AsyncGenerator<SSEEvent> {
   const response = await fetch(`${API_BASE}/api/intake/search`, {
     method: "POST",
