@@ -5,17 +5,23 @@ from typing import Literal
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
+from paths import resolve_repo_path
+
 
 class Settings(BaseSettings):
     # LLM
     ANTHROPIC_API_KEY: str = ""
-    LLM_PROVIDER: Literal["anthropic", "ollama", "openrouter"] = "openrouter"
+    LLM_PROVIDER: Literal["anthropic", "ollama", "openrouter", "bedrock"] = "openrouter"
     LLM_MODEL: str = "openai/gpt-4o-mini"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
 
     # OpenRouter
     OPENROUTER_API_KEY: str = ""
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+
+    # Bedrock / OpenAI-compatible gateway (Mantle)
+    OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = ""
 
     # Embeddings
     EMBEDDING_MODEL: str = "intfloat/multilingual-e5-small"
@@ -28,12 +34,12 @@ class Settings(BaseSettings):
     NEXT_PUBLIC_API_URL: str = "https://iknl.datameesters.nl"
 
     # Storage paths
-    CHROMADB_PATH: str = "data/chromadb"
-    FEEDBACK_DB_PATH: str = "data/feedback.db"
-    KANKER_NL_JSON_PATH: str = "data/kanker_nl_pages_all.json"
-    PUBLICATIONS_DIR: str = "data/reports"
-    SCIENTIFIC_PUBLICATIONS_DIR: str = "data/scientific_publications"
-    SITEMAP_PATH: str = "data/sitemap.json"
+    CHROMADB_PATH: str = resolve_repo_path("data/chromadb")
+    FEEDBACK_DB_PATH: str = resolve_repo_path("data/feedback.db")
+    KANKER_NL_JSON_PATH: str = resolve_repo_path("data/kanker_nl_pages_all.json")
+    PUBLICATIONS_DIR: str = resolve_repo_path("data/reports")
+    SCIENTIFIC_PUBLICATIONS_DIR: str = resolve_repo_path("data/scientific_publications")
+    SITEMAP_PATH: str = resolve_repo_path("data/sitemap.json")
 
     # External APIs
     NKR_API_BASE_URL: str = "https://api.nkr-cijfers.iknl.nl/api"
@@ -54,7 +60,7 @@ class Settings(BaseSettings):
             raise ValueError("LLM_MODEL cannot be empty")
         return v
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ["../.env", ".env"], "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()

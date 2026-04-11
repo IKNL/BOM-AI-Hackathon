@@ -13,10 +13,11 @@ from datetime import datetime, timezone
 import aiosqlite
 
 from models import GegevensModel
+from paths import resolve_repo_path
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = os.environ.get("FEEDBACK_DB_PATH", "data/feedback.db")
+DB_PATH = resolve_repo_path(os.environ.get("FEEDBACK_DB_PATH", "data/feedback.db"))
 
 
 async def _ensure_sessions_table(db_path: str = DB_PATH) -> None:
