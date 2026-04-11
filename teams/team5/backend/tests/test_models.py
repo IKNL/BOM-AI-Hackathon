@@ -189,14 +189,17 @@ class TestIntakeSummarizeResponse:
             samenvatting="U zoekt info over borstkanker.",
             kankersoort="borstkanker",
             vraag_type="patient_info",
+            search_query="wat is borstkanker",
         )
         assert resp.kankersoort == "borstkanker"
+        assert resp.search_query == "wat is borstkanker"
 
     def test_geen_kankersoort(self):
         resp = IntakeSummarizeResponse(
             samenvatting="U zoekt algemene info.",
             kankersoort="geen",
             vraag_type="breed",
+            search_query="algemene informatie over kanker",
         )
         assert resp.kankersoort == "geen"
 
@@ -210,8 +213,10 @@ class TestIntakeSearchRequest:
             kankersoort="darmkanker",
             vraag_type="cijfers",
             samenvatting="U zoekt overlevingscijfers voor darmkanker.",
+            search_query="overlevingscijfers darmkanker",
         )
         assert req.gebruiker_type == "onderzoeker"
+        assert req.search_query == "overlevingscijfers darmkanker"
 
     def test_requires_gebruiker_type(self):
         with pytest.raises(ValidationError):

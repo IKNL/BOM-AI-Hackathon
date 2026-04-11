@@ -524,6 +524,7 @@ async def intake_search(request: IntakeSearchRequest):
                 samenvatting=request.samenvatting,
                 vraag_type=request.vraag_type,
                 kankersoort=request.kankersoort,
+                search_query=request.search_query,
                 connectors=connector_dict,
                 model=LLM_MODEL,
             ):
