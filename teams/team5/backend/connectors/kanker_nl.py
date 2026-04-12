@@ -119,7 +119,7 @@ async def search_kanker_nl(
         }
 
         # Apply metadata filters
-        where_clause = _build_where_clause(kankersoort, section)
+        where_clause = _build_where_clause(kankersoort, section, connector)
         if where_clause is not None:
             query_kwargs["where"] = where_clause
 
@@ -194,18 +194,72 @@ async def search_kanker_nl(
         )
 
 
+# Known kankersoort slugs from the sitemap — used for exact-match filtering.
+# Populated lazily from the ChromaDB collection at first use.
+_KNOWN_SLUGS: set[str] = set()
+
+
+def _normalize_kankersoort(raw: str) -> str:
+    """Normalize a cancer type string to match sitemap slugs."""
+    return raw.lower().strip().replace(" ", "-")
+
+
+def _resolve_kankersoort_slug(raw: str, connector: "KankerNLConnector") -> str | None:
+    """Find the best matching kankersoort slug from the known set.
+
+    Returns the exact slug if found, or checks for prefix/substring matches.
+    Returns None if no match (let semantic search handle relevance instead).
+    """
+    global _KNOWN_SLUGS
+    if not _KNOWN_SLUGS and connector._collection is not None:
+        try:
+            # Get unique kankersoort values from the collection
+            sample = connector._collection.get(limit=1, include=["metadatas"])
+            if sample and sample["metadatas"]:
+                # Fetch a larger sample to build the slug set
+                all_meta = connector._collection.get(
+                    limit=connector._collection.count(),
+                    include=["metadatas"],
+                )
+                _KNOWN_SLUGS = {
+                    m.get("kankersoort", "")
+                    for m in all_meta["metadatas"]
+                    if m.get("kankersoort")
+                }
+        except Exception:
+            pass
+
+    slug = _normalize_kankersoort(raw)
+
+    # Exact match
+    if slug in _KNOWN_SLUGS:
+        return slug
+
+    # Prefix/substring match (e.g. "darmkanker" matches "darmkanker-dikkedarmkanker")
+    matches = [s for s in _KNOWN_SLUGS if slug in s or s in slug]
+    if len(matches) == 1:
+        return matches[0]
+
+    # Multiple or no matches — skip filter, let semantic search handle it
+    return None
+
+
 def _build_where_clause(
     kankersoort: Optional[str],
     section: Optional[str],
+    connector: Optional["KankerNLConnector"] = None,
 ) -> dict | None:
     """Build a ChromaDB where clause from optional filters.
 
-    Returns None if no filters are provided.
+    Returns None if no filters are provided or if no exact slug match is found
+    (in which case semantic search handles relevance via the query text).
     """
     filters: list[dict] = []
 
-    if kankersoort:
-        filters.append({"kankersoort": {"$eq": kankersoort}})
+    if kankersoort and connector is not None:
+        slug = _resolve_kankersoort_slug(kankersoort, connector)
+        if slug:
+            filters.append({"kankersoort": {"$eq": slug}})
     if section:
         filters.append({"section": {"$eq": section}})
 
