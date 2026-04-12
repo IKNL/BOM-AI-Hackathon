@@ -54,7 +54,7 @@ PUBLICATION_META: dict[str, dict] = {
     "trendrapport_darmkanker_def": {
         "source_type": "report",
         "title": "Trendrapport darmkanker",
-        "url": "https://iknl.nl/trendrapport-darmkanker",
+        "url": "https://iknl.nl/kankersoorten/darmkanker/onderzoek/rapportages",
         "language": "nl",
         "topic": "Langetermijntrends bij darmkanker",
     },

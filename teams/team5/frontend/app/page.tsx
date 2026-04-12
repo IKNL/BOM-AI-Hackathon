@@ -427,7 +427,7 @@ export default function ChatPage() {
             {flowState === "OFF_TOPIC" && !isLoading && (
               <div className="ml-10 flex gap-3">
                 <a
-                  href="https://www.iknl.nl/contact"
+                  href="https://iknl.nl/over-iknl/contact"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2.5 text-sm font-medium rounded-xl border border-teal-300 bg-teal-50 text-teal-800 hover:bg-teal-100 transition-colors"

@@ -291,7 +291,7 @@ BELANGRIJK:
 - Vat geen medische inhoud samen. Verwijs alleen naar de bron.
 - Geef NOOIT persoonlijk medisch advies, diagnoses of behandeladviezen.
 - Bij persoonlijke medische vragen (over eigen diagnose, behandeling, prognose): verwijs door naar de huisarts of behandelend specialist.
-- Als er GEEN relevante bronnen zijn gevonden: zeg dat eerlijk en verwijs naar kanker.nl of IKNL (https://www.iknl.nl/contact).
+- Als er GEEN relevante bronnen zijn gevonden: zeg dat eerlijk en verwijs naar kanker.nl of IKNL (https://iknl.nl/over-iknl/contact).
 - Pas je taalgebruik aan op basis van de bekendheid: {ai_bekendheid}
 
 Gevonden bronnen:
@@ -411,7 +411,7 @@ async def search_and_format(
         lines.append(
             "Helaas heb ik geen relevante bronnen gevonden voor deze zoekopdracht. "
             "Probeer uw vraag anders te formuleren, of neem contact op met "
-            "[IKNL](https://www.iknl.nl/contact) voor verdere hulp."
+            "[IKNL](https://iknl.nl/over-iknl/contact) voor verdere hulp."
         )
     final_text = "\n".join(lines)
 

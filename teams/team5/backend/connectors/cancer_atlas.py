@@ -264,7 +264,7 @@ async def get_regional_cancer_data(
             )
 
         citation = Citation(
-            url=f"https://kankeratlas.iknl.nl/{cancer_type.lower().replace(' ', '-')}",
+            url="https://kankeratlas.iknl.nl/",
             title=f"Kankeratlas: {cancer_type}",
             reliability="official",
         )

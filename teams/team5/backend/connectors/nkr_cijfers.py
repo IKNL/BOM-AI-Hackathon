@@ -263,7 +263,7 @@ class NKRCijfersConnector(SourceConnector):
                     ),
                     sources=[
                         Citation(
-                            url=f"https://nkr-cijfers.iknl.nl/{page_slug}",
+                            url="https://nkr-cijfers.iknl.nl/",
                             title=f"NKR-Cijfers: {page_slug}",
                             reliability="official",
                         )
@@ -287,7 +287,7 @@ class NKRCijfersConnector(SourceConnector):
                 summary=summary,
                 sources=[
                     Citation(
-                        url=f"https://nkr-cijfers.iknl.nl/{page_slug}",
+                        url="https://nkr-cijfers.iknl.nl/",
                         title=f"NKR-Cijfers: {cancer_type} - {page_slug}",
                         reliability="official",
                     )
