@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <base href="/proxy/8000/">
+  <title>IKNL Sanctuary</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/chatBotPage.css"/>
+  <link rel="stylesheet" href="css/footer.css"/>
+</head>
+<body>
+
+  <header class="header">
+    <a href="homePage.html"><img src="images/logo.png" alt="IKNL Logo" class="logo" /></a>
+  </header>
+
+  <main class="chat-container">
+    <div class="chat-messages" id="chatMessages">
+      <div class="welcome-message">
+        <h1>Welcome to IKNL Cancer Assistant</h1>
+        <p>Ask me anything about cancer types, treatments, or care protocols.</p>
+      </div>
+    </div>
+  </main>
+
+  <div class="input-container">
+    <div class="input-wrapper">
+      <input type="text" id="searchInput" placeholder="Type your question here..." />
+      <button class="send-btn" onclick="submitQuestion()">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div>
+      <h4>IKNL</h4>
+      <ul>
+        <li><a href="#">About IKNL</a></li>
+        <li><a href="#">Press</a></li>
+        <li><a href="#">Vacancies</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Privacy &amp; Security</h4>
+      <ul>
+        <li><a href="#">Privacy Statement</a></li>
+        <li><a href="#">Accessibility Statement</a></li>
+        <li><a href="#">Cookie Policy</a></li>
+        <li><a href="#">Report Security Vulnerability</a></li>
+        <li><a href="#">Disclaimer</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Follow Us</h4>
+      <ul><li><a href="#">Newsletter</a></li></ul>
+      <div class="footer-social">
+        <a href="#" class="social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+        <a href="#" class="social-btn"><i class="fa-brands fa-youtube"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const API = 'backend';
+    const SESSION_ID = 'session_' + Date.now();
+    const chatMessages = document.getElementById('chatMessages');
+    const searchInput = document.getElementById('searchInput');
+    let onboardingComplete = false;
+
+    // Start onboarding on page load
+    window.addEventListener('load', () => {
+      addMessage('Hoe gaat het met u? (Type "skip" om onboarding over te slaan)');
+    });
+
+    function addMessage(text, isUser = false) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = isUser ? 'message user-message' : 'message bot-message';
+      
+      // Convert markdown to HTML
+      if (!isUser) {
+        text = text
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // Bold
+          .replace(/\*(.+?)\*/g, '<em>$1</em>') // Italic
+          .replace(/^- /gm, '• ') // Convert dashes to bullets
+          .replace(/\n/g, '<br>'); // Line breaks
+      }
+      
+      msgDiv.innerHTML = `<div class="message-content">${text}</div>`;
+      chatMessages.appendChild(msgDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return msgDiv;
+    }
+
+    function addTopicPills(topics, messageDiv) {
+      if (!topics || topics.length === 0) return;
+      
+      const pillsContainer = document.createElement('div');
+      pillsContainer.className = 'topic-pills';
+      
+      topics.forEach(topic => {
+        const pill = document.createElement('button');
+        pill.className = 'topic-pill';
+        pill.textContent = topic;
+        pill.onclick = () => {
+          searchInput.value = topic;
+          submitQuestion();
+        };
+        pillsContainer.appendChild(pill);
+      });
+      
+      // Append to the message div, not inside message-content
+      messageDiv.appendChild(pillsContainer);
+    }
+
+    function addSources(sources, messageDiv) {
+      if (!sources || sources.length === 0) return;
+      
+      const sourcesDiv = document.createElement('div');
+      sourcesDiv.className = 'sources';
+      sourcesDiv.innerHTML = '<div class="sources-label">Bronnen:</div>';
+      
+      sources.forEach(source => {
+        const link = document.createElement('a');
+        link.href = source;
+        link.target = '_blank';
+        link.className = 'source-link';
+        link.innerHTML = `<i class="fa-solid fa-link"></i> ${source}`;
+        sourcesDiv.appendChild(link);
+      });
+      
+      // Append to the message div, not inside message-content
+      messageDiv.appendChild(sourcesDiv);
+    }
+
+    async function handleOnboarding(message) {
+      try {
+        const res = await fetch(`${API}/onboard`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message: message,
+            session_id: SESSION_ID
+          })
+        });
+        const data = await res.json();
+        
+        if (data.error) {
+          addMessage('⚠️ ' + data.error);
+          return;
+        }
+        
+        addMessage(data.response);
+        
+        if (data.onboarding_complete) {
+          onboardingComplete = true;
+          searchInput.placeholder = 'Stel uw vraag...';
+        }
+      } catch (err) {
+        console.error(err);
+        addMessage('⚠️ Could not reach the backend.');
+      }
+    }
+
+    async function submitQuestion() {
+      const q = searchInput.value.trim();
+      if (!q) return;
+
+      // Add user message
+      addMessage(q, true);
+      searchInput.value = '';
+
+      // If onboarding not complete, handle onboarding
+      if (!onboardingComplete) {
+        await handleOnboarding(q);
+        return;
+      }
+
+      // Add loading message
+      const loadingMsg = addMessage('<i class="fa-solid fa-spinner fa-spin"></i> Searching IKNL sources...');
+
+      try {
+        const res = await fetch(`${API}/ask`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            question: q,
+            session_id: SESSION_ID
+          })
+        });
+        const data = await res.json();
+        
+        // Remove loading message
+        loadingMsg.remove();
+        
+        if (data.error) {
+          addMessage('⚠️ ' + data.error);
+          return;
+        }
+        
+        // Add bot response
+        const botMsg = addMessage(data.answer);
+        
+        // Add topic pills
+        addTopicPills(data.next_topics, botMsg);
+        
+        // Add sources
+        addSources(data.sources, botMsg);
+        
+      } catch (err) {
+        loadingMsg.remove();
+        console.error(err);
+        addMessage('⚠️ Could not reach the backend. Please ensure the server is running.');
+      }
+    }
+
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitQuestion();
+    });
+  </script>
+</body>
+</html>
