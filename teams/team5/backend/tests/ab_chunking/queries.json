@@ -1,0 +1,336 @@
+{
+  "kanker_nl": [
+    {
+      "id": "kn_01",
+      "query": "Wat zijn de symptomen van darmkanker?",
+      "category": "symptom",
+      "kankersoort": "darmkanker",
+      "relevant_url_patterns": ["darmkanker", "dikkedarmkanker"],
+      "relevant_sections": ["algemeen", "symptomen"]
+    },
+    {
+      "id": "kn_02",
+      "query": "Hoe herken je borstkanker?",
+      "category": "symptom",
+      "kankersoort": "borstkanker",
+      "relevant_url_patterns": ["borstkanker"],
+      "relevant_sections": ["algemeen", "symptomen"]
+    },
+    {
+      "id": "kn_03",
+      "query": "Welke klachten horen bij longkanker?",
+      "category": "symptom",
+      "kankersoort": "longkanker",
+      "relevant_url_patterns": ["longkanker"],
+      "relevant_sections": ["algemeen", "symptomen", "klachten"]
+    },
+    {
+      "id": "kn_04",
+      "query": "Symptomen van blaaskanker",
+      "category": "symptom",
+      "kankersoort": "blaaskanker",
+      "relevant_url_patterns": ["blaaskanker"],
+      "relevant_sections": ["algemeen", "symptomen"]
+    },
+    {
+      "id": "kn_05",
+      "query": "Wat zijn tekenen van prostaatkanker?",
+      "category": "symptom",
+      "kankersoort": "prostaatkanker",
+      "relevant_url_patterns": ["prostaatkanker"],
+      "relevant_sections": ["algemeen", "symptomen"]
+    },
+    {
+      "id": "kn_06",
+      "query": "Hoe merk je leverkanker?",
+      "category": "symptom",
+      "kankersoort": "leverkanker",
+      "relevant_url_patterns": ["leverkanker"],
+      "relevant_sections": ["algemeen", "symptomen"]
+    },
+    {
+      "id": "kn_07",
+      "query": "Klachten bij slokdarmkanker",
+      "category": "symptom",
+      "kankersoort": "slokdarmkanker",
+      "relevant_url_patterns": ["slokdarmkanker"],
+      "relevant_sections": ["algemeen", "symptomen", "klachten"]
+    },
+    {
+      "id": "kn_08",
+      "query": "Symptomen van eierstokkanker",
+      "category": "symptom",
+      "kankersoort": "eierstokkanker",
+      "relevant_url_patterns": ["eierstokkanker"],
+      "relevant_sections": ["algemeen", "symptomen"]
+    },
+    {
+      "id": "kn_09",
+      "query": "Hoe herken je melanoom?",
+      "category": "symptom",
+      "kankersoort": "melanoom",
+      "relevant_url_patterns": ["melanoom"],
+      "relevant_sections": ["algemeen", "symptomen", "herkennen"]
+    },
+    {
+      "id": "kn_10",
+      "query": "Welke symptomen heeft maagkanker?",
+      "category": "symptom",
+      "kankersoort": "maagkanker",
+      "relevant_url_patterns": ["maagkanker"],
+      "relevant_sections": ["algemeen", "symptomen"]
+    },
+    {
+      "id": "kn_11",
+      "query": "Welke behandelingen zijn er voor borstkanker?",
+      "category": "treatment",
+      "kankersoort": "borstkanker",
+      "relevant_url_patterns": ["borstkanker"],
+      "relevant_sections": ["behandelingen", "behandeling"]
+    },
+    {
+      "id": "kn_12",
+      "query": "Hoe wordt darmkanker behandeld?",
+      "category": "treatment",
+      "kankersoort": "darmkanker",
+      "relevant_url_patterns": ["darmkanker", "dikkedarmkanker"],
+      "relevant_sections": ["behandelingen", "behandeling"]
+    },
+    {
+      "id": "kn_13",
+      "query": "Wat is immunotherapie bij longkanker?",
+      "category": "treatment",
+      "kankersoort": "longkanker",
+      "relevant_url_patterns": ["longkanker"],
+      "relevant_sections": ["behandelingen", "immunotherapie"]
+    },
+    {
+      "id": "kn_14",
+      "query": "Bestraling bij prostaatkanker",
+      "category": "treatment",
+      "kankersoort": "prostaatkanker",
+      "relevant_url_patterns": ["prostaatkanker"],
+      "relevant_sections": ["behandelingen", "bestraling"]
+    },
+    {
+      "id": "kn_15",
+      "query": "Chemotherapie bij eierstokkanker",
+      "category": "treatment",
+      "kankersoort": "eierstokkanker",
+      "relevant_url_patterns": ["eierstokkanker"],
+      "relevant_sections": ["behandelingen", "chemotherapie"]
+    },
+    {
+      "id": "kn_16",
+      "query": "Operatie bij maagkanker",
+      "category": "treatment",
+      "kankersoort": "maagkanker",
+      "relevant_url_patterns": ["maagkanker"],
+      "relevant_sections": ["behandelingen", "operatie"]
+    },
+    {
+      "id": "kn_17",
+      "query": "Behandeling van melanoom",
+      "category": "treatment",
+      "kankersoort": "melanoom",
+      "relevant_url_patterns": ["melanoom"],
+      "relevant_sections": ["behandelingen", "behandeling"]
+    },
+    {
+      "id": "kn_18",
+      "query": "Hormoontherapie bij borstkanker",
+      "category": "treatment",
+      "kankersoort": "borstkanker",
+      "relevant_url_patterns": ["borstkanker"],
+      "relevant_sections": ["behandelingen", "hormoontherapie"]
+    },
+    {
+      "id": "kn_19",
+      "query": "Doelgerichte therapie bij nierkanker",
+      "category": "treatment",
+      "kankersoort": "nierkanker",
+      "relevant_url_patterns": ["nierkanker"],
+      "relevant_sections": ["behandelingen", "doelgerichte"]
+    },
+    {
+      "id": "kn_20",
+      "query": "Stamceltransplantatie bij leukemie",
+      "category": "treatment",
+      "kankersoort": "leukemie",
+      "relevant_url_patterns": ["leukemie"],
+      "relevant_sections": ["behandelingen", "stamceltransplantatie"]
+    },
+    {
+      "id": "kn_21",
+      "query": "Hoe ga je om met vermoeidheid na kanker?",
+      "category": "living_with",
+      "kankersoort": null,
+      "relevant_url_patterns": ["vermoeidheid", "gevolgen"],
+      "relevant_sections": ["gevolgen", "leven"]
+    },
+    {
+      "id": "kn_22",
+      "query": "Wat kan ik verwachten na een darmoperatie?",
+      "category": "living_with",
+      "kankersoort": "darmkanker",
+      "relevant_url_patterns": ["darmkanker", "dikkedarmkanker"],
+      "relevant_sections": ["gevolgen", "na-de-behandeling", "operatie"]
+    },
+    {
+      "id": "kn_23",
+      "query": "Terugkeer van kanker, wat nu?",
+      "category": "living_with",
+      "kankersoort": null,
+      "relevant_url_patterns": ["terugkeer", "recidief"],
+      "relevant_sections": ["algemeen", "gevolgen"]
+    },
+    {
+      "id": "kn_24",
+      "query": "Seksualiteit na kankerbehandeling",
+      "category": "living_with",
+      "kankersoort": null,
+      "relevant_url_patterns": ["seksualiteit", "seksueel"],
+      "relevant_sections": ["gevolgen"]
+    },
+    {
+      "id": "kn_25",
+      "query": "Voeding tijdens chemotherapie",
+      "category": "living_with",
+      "kankersoort": null,
+      "relevant_url_patterns": ["voeding", "eten"],
+      "relevant_sections": ["gevolgen", "behandelingen"]
+    },
+    {
+      "id": "kn_26",
+      "query": "Werken met kanker",
+      "category": "living_with",
+      "kankersoort": null,
+      "relevant_url_patterns": ["werken", "werk"],
+      "relevant_sections": ["gevolgen"]
+    },
+    {
+      "id": "kn_27",
+      "query": "Psychische klachten bij kanker",
+      "category": "living_with",
+      "kankersoort": null,
+      "relevant_url_patterns": ["psychisch", "emotie", "angst"],
+      "relevant_sections": ["gevolgen"]
+    },
+    {
+      "id": "kn_28",
+      "query": "Fertiliteit na kankerbehandeling",
+      "category": "living_with",
+      "kankersoort": null,
+      "relevant_url_patterns": ["fertiliteit", "vruchtbaarheid"],
+      "relevant_sections": ["gevolgen"]
+    },
+    {
+      "id": "kn_29",
+      "query": "Palliatieve zorg bij kanker",
+      "category": "living_with",
+      "kankersoort": null,
+      "relevant_url_patterns": ["palliatieve", "palliatief"],
+      "relevant_sections": ["gevolgen", "algemeen"]
+    },
+    {
+      "id": "kn_30",
+      "query": "Huidklachten door bestraling",
+      "category": "living_with",
+      "kankersoort": null,
+      "relevant_url_patterns": ["huidklachten", "bestraling", "huid"],
+      "relevant_sections": ["gevolgen", "bijwerkingen"]
+    }
+  ],
+  "publications": [
+    {
+      "id": "pub_01",
+      "query": "Hoeveel mensen krijgen darmkanker per jaar?",
+      "category": "statistical",
+      "relevant_titles": ["Trendrapport darmkanker"]
+    },
+    {
+      "id": "pub_02",
+      "query": "Overlevingscijfers borstkanker in Nederland",
+      "category": "statistical",
+      "relevant_titles": ["Man-vrouwverschillen bij kanker"]
+    },
+    {
+      "id": "pub_03",
+      "query": "Trends in longkankerbehandeling",
+      "category": "statistical",
+      "relevant_titles": ["Trends in treatment of stage I-III NSCLC", "Trends in treatment of stage I-III SCLC"]
+    },
+    {
+      "id": "pub_04",
+      "query": "Verschil in kanker tussen mannen en vrouwen",
+      "category": "statistical",
+      "relevant_titles": ["Man-vrouwverschillen bij kanker"]
+    },
+    {
+      "id": "pub_05",
+      "query": "Impact of comorbidities on cancer survival",
+      "category": "clinical",
+      "relevant_titles": ["Comorbidities and survival in 8 cancers"]
+    },
+    {
+      "id": "pub_06",
+      "query": "Treatment patterns for small cell lung cancer",
+      "category": "clinical",
+      "relevant_titles": ["Trends in treatment of stage I-III SCLC"]
+    },
+    {
+      "id": "pub_07",
+      "query": "Ovarian cancer recurrence prediction",
+      "category": "clinical",
+      "relevant_titles": ["Ovarian cancer recurrence prediction"]
+    },
+    {
+      "id": "pub_08",
+      "query": "Head and neck cancer survival rates in Europe",
+      "category": "clinical",
+      "relevant_titles": ["Head and neck cancers survival in Europe, Taiwan and Japan"]
+    },
+    {
+      "id": "pub_09",
+      "query": "Hoe beïnvloeden comorbiditeiten de overleving bij kanker?",
+      "category": "complex",
+      "relevant_titles": ["Comorbidities and survival in 8 cancers"]
+    },
+    {
+      "id": "pub_10",
+      "query": "Wat zijn de trends in uitgezaaide kanker?",
+      "category": "complex",
+      "relevant_titles": ["Uitgezaaide kanker 2025"]
+    },
+    {
+      "id": "pub_11",
+      "query": "Vergelijking behandelingen longkanker stadium I-III",
+      "category": "complex",
+      "relevant_titles": ["Trends in treatment of stage I-III NSCLC", "Trends in treatment of stage I-III SCLC"]
+    },
+    {
+      "id": "pub_12",
+      "query": "Regionale verschillen in kankerincidentie",
+      "category": "complex",
+      "relevant_titles": ["Man-vrouwverschillen bij kanker", "Uitgezaaide kanker 2025"]
+    },
+    {
+      "id": "pub_13",
+      "query": "Machine learning voor kankerprognose",
+      "category": "complex",
+      "relevant_titles": ["Ovarian cancer recurrence prediction"]
+    },
+    {
+      "id": "pub_14",
+      "query": "Veranderingen in darmkankerbehandeling over tijd",
+      "category": "complex",
+      "relevant_titles": ["Trendrapport darmkanker"]
+    },
+    {
+      "id": "pub_15",
+      "query": "Overlevingsverschillen hoofd-halskanker internationaal",
+      "category": "complex",
+      "relevant_titles": ["Head and neck cancers survival in Europe, Taiwan and Japan"]
+    }
+  ]
+}
