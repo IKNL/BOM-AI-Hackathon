@@ -21,8 +21,8 @@ from tests.ab_chunking.metrics import (
 
 logger = logging.getLogger(__name__)
 
-BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
-REPO_ROOT = BACKEND_DIR.parent.parent
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent  # teams/team5/backend/
+REPO_ROOT = BACKEND_DIR.parent.parent.parent  # /home/.../Hackathon-BOM-IKNL/
 DATA_DIR = REPO_ROOT / "data"
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 QUERIES_PATH = Path(__file__).resolve().parent / "queries.json"
@@ -103,34 +103,41 @@ async def run_kanker_nl_test(variant_name: str, chunker_fn, n_results: int = 5) 
     # Ingest
     all_ids, all_docs, all_metas = [], [], []
     is_hybrid = variant_name == "E_hybrid"
+    seen_urls: set[str] = set()
 
     for url, text in pages.items():
         norm_url = url.strip().rstrip("/")
         if norm_url.startswith("https://kanker.nl/"):
             norm_url = norm_url.replace("https://kanker.nl/", "https://www.kanker.nl/", 1)
 
+        if norm_url in seen_urls:
+            continue
+        seen_urls.add(norm_url)
+
         meta = sitemap.get(norm_url)
         if meta is None:
             continue
 
+        # Use full hash to avoid collisions
+        url_hash = hashlib.md5(norm_url.encode()).hexdigest()
+
         if is_hybrid:
             result = chunker_fn(text)
             chunks = result.get("fine", [])
-            # Also add coarse chunks with a tier marker
             for i, chunk in enumerate(result.get("coarse", [])):
-                doc_id = f"{variant_name}_{hashlib.md5(norm_url.encode()).hexdigest()[:10]}_coarse_{i}"
+                doc_id = f"{variant_name}_{url_hash}_c{i}"
                 all_ids.append(doc_id)
                 all_docs.append(chunk)
                 all_metas.append({**meta, "tier": "coarse", "url": meta["url"]})
             for i, chunk in enumerate(chunks):
-                doc_id = f"{variant_name}_{hashlib.md5(norm_url.encode()).hexdigest()[:10]}_fine_{i}"
+                doc_id = f"{variant_name}_{url_hash}_f{i}"
                 all_ids.append(doc_id)
                 all_docs.append(chunk)
                 all_metas.append({**meta, "tier": "fine", "url": meta["url"]})
         else:
             chunks = chunker_fn(text)
             for i, chunk in enumerate(chunks):
-                doc_id = f"{variant_name}_{hashlib.md5(norm_url.encode()).hexdigest()[:10]}_{i}"
+                doc_id = f"{variant_name}_{url_hash}_{i}"
                 all_ids.append(doc_id)
                 all_docs.append(chunk)
                 all_metas.append({"url": meta["url"], "title": meta.get("title", ""), "kankersoort": meta.get("kankersoort", ""), "section": meta.get("section", "")})
