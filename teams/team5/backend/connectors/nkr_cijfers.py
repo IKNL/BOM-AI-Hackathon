@@ -207,6 +207,10 @@ class NKRCijfersConnector(SourceConnector):
         region: str | None = None,
         group_by: str = "period",
     ) -> SourceResult:
+        if self._client is None:
+            return SourceResult(
+                data=[], summary="NKR Cijfers connector niet geïnitialiseerd.", sources=[], visualizable=False,
+            )
         """Fetch data from the /data endpoint for a given page and cancer type.
 
         This is the shared implementation for all three tool methods.

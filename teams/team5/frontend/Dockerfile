@@ -14,6 +14,10 @@ RUN pnpm install --frozen-lockfile
 # Copy application source
 COPY . .
 
+# Set backend URL for Next.js rewrites (baked at build time)
+ARG BACKEND_URL=http://backend:8000
+ENV BACKEND_URL=${BACKEND_URL}
+
 # Build the Next.js application
 RUN pnpm build
 

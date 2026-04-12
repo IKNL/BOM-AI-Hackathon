@@ -64,6 +64,7 @@ export async function* sendChatMessage(
         const trimmed = line.trim();
         if (trimmed === "") {
           // Empty line = end of SSE event block, reset for next event
+          currentEvent = "token";
           continue;
         }
 

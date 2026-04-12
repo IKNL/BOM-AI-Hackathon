@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN || "";
 
 interface SessionSummary {
   session_id: string;
@@ -24,22 +25,71 @@ export default function AdminPage() {
   const [selected, setSelected] = useState<SessionDetail | null>(null);
   const [feedbackCsv, setFeedbackCsv] = useState<string | null>(null);
   const [tab, setTab] = useState<"sessions" | "feedback">("sessions");
+  const [error, setError] = useState<string | null>(null);
+  const [authed, setAuthed] = useState(!ADMIN_TOKEN);
+  const [tokenInput, setTokenInput] = useState("");
 
   useEffect(() => {
+    if (!authed) return;
     fetch(`${API_BASE}/api/admin/sessions`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => setSessions(d.sessions || []))
-      .catch(() => {});
-  }, []);
+      .catch((err) => setError(`Sessies laden mislukt: ${err.message}`));
+  }, [authed]);
+
+  if (!authed) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl border p-6 w-80">
+          <h1 className="text-lg font-bold text-gray-900 mb-4">Admin Login</h1>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (tokenInput === ADMIN_TOKEN) setAuthed(true);
+              else setError("Ongeldig wachtwoord");
+            }}
+          >
+            <input
+              type="password"
+              value={tokenInput}
+              onChange={(e) => { setTokenInput(e.target.value); setError(null); }}
+              placeholder="Wachtwoord"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+            {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-teal-700 text-white text-sm font-medium rounded-lg hover:bg-teal-800"
+            >
+              Inloggen
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   const loadSession = async (id: string) => {
-    const r = await fetch(`${API_BASE}/api/admin/sessions/${id}`);
-    if (r.ok) setSelected(await r.json());
+    try {
+      const r = await fetch(`${API_BASE}/api/admin/sessions/${id}`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      setSelected(await r.json());
+    } catch (err) {
+      setError(`Sessie laden mislukt: ${(err as Error).message}`);
+    }
   };
 
   const loadFeedback = async () => {
-    const r = await fetch(`${API_BASE}/api/feedback/export`);
-    if (r.ok) setFeedbackCsv(await r.text());
+    try {
+      const r = await fetch(`${API_BASE}/api/feedback/export`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      setFeedbackCsv(await r.text());
+    } catch (err) {
+      setError(`Feedback laden mislukt: ${(err as Error).message}`);
+    }
   };
 
   return (
@@ -48,6 +98,19 @@ export default function AdminPage() {
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           IKNL Infobot — Admin
         </h1>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            {error}
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="ml-3 text-red-500 hover:text-red-700 font-medium"
+            >
+              Sluiten
+            </button>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6">

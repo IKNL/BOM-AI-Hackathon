@@ -107,7 +107,7 @@ export async function* searchAndStream(request: {
 
       for (const line of lines) {
         const trimmed = line.trim();
-        if (trimmed === "") continue;
+        if (trimmed === "") { currentEvent = "token"; continue; }
 
         const parsed = parseSSELine(trimmed);
         if (!parsed) continue;

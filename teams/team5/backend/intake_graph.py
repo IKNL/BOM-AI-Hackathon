@@ -42,10 +42,10 @@ Probeer uit het bericht af te leiden of de gebruiker ervaring heeft met AI:
 - Als ze duidelijk ervaren zijn, technische taal gebruiken → "erg_bekend"
 - Als je het niet kunt afleiden → null
 
-Als de gebruiker MEER informatie geeft (wie ze zijn, een vraag), vul dat ook in.
+BELANGRIJK: Vul ALLEEN ai_bekendheid in. Vul NIET gebruiker_type, vraag_tekst of andere velden in, ook als de gebruiker die informatie geeft. Die worden in een volgende stap gevraagd.
 
 Antwoord ALLEEN in JSON:
-{{"ai_bekendheid": "..." of null, "gebruiker_type": "..." of null, "vraag_tekst": "..." of null, "kankersoort": "..." of null, "vraag_type": "..." of null, "bot_message": "..."}}
+{{"ai_bekendheid": "..." of null, "bot_message": "..."}}
 
 SCOPE: Als het bericht NIET over kanker, gezondheid of medische informatie gaat, zet scope op "off_topic" en antwoord dat dit buiten je expertise valt.
 Bij persoonlijke medische vragen (eigen diagnose, prognose): verwijs naar de huisarts of specialist.
@@ -64,13 +64,13 @@ Geldige rollen: patient, publiek, zorgverlener, student, beleidsmaker, onderzoek
 - "ik ben patiënt/naaste/familie" → patient
 - "ik ben student/docent" → student
 
-Als de gebruiker ook een vraag stelt, vul vraag_tekst in.
+BELANGRIJK: Vul ALLEEN gebruiker_type in. Vul NIET vraag_tekst of andere velden in, ook als de gebruiker die informatie geeft. Die worden in een volgende stap gevraagd.
 
 Antwoord ALLEEN in JSON:
-{{"gebruiker_type": "..." of null, "vraag_tekst": "..." of null, "kankersoort": "..." of null, "vraag_type": "..." of null, "bot_message": "..."}}
+{{"gebruiker_type": "..." of null, "bot_message": "...", "suggestions": ["...", "...", "..."]}}
 
-TOON: {tone}. Als je de rol hebt, bedank en zeg dat je nu gaat vragen waarmee je kunt helpen. Voorbeeld: "Bedankt! Waar kan ik u mee helpen?"
-Geef 2-3 korte voorbeeldvragen passend bij hun rol om te inspireren.""",
+TOON: {tone}. Als je de rol hebt, bedank en zeg: "Waar kan ik u mee helpen? Kies een van de voorbeeldvragen hieronder, of typ uw eigen vraag."
+Geef in het "suggestions" veld 2-3 korte voorbeeldvragen passend bij hun rol. De vragen MOETEN over kanker gaan — dit is een IKNL kankerinformatie chatbot. Voorbeeld voor een patient: ["Wat zijn de symptomen van darmkanker?", "Welke behandelingen zijn er voor borstkanker?", "Hoe kan ik me voorbereiden op chemotherapie?"]. Voorbeeld voor een zorgverlener: ["Wat zijn de laatste richtlijnen voor longkankerbehandeling?", "Welke screeningsmethoden zijn er voor colorectaal carcinoom?", "Wat zijn de overlevingscijfers bij melanoom?"]. De suggesties worden als knoppen getoond.""",
 
     "vraag": """Je bent een vriendelijke informatie-assistent. De gebruiker is een {gebruiker_type}.
 Ze zijn {ai_bekendheid} bekend met AI.
@@ -103,7 +103,9 @@ Als de vraag BUITEN SCOPE valt (niet over kanker, gezondheid of IKNL-bronnen):
 - Laat alle andere velden op null
 
 Antwoord ALLEEN in JSON:
-{{"vraag_tekst": "..." of null, "kankersoort": "..." of null, "vraag_type": "..." of null, "samenvatting": "..." of null, "search_query": "..." of null, "scope": "in_scope" of "off_topic", "bot_message": "..."}}
+{{"vraag_tekst": "..." of null, "kankersoort": "..." of null, "vraag_type": "..." of null, "samenvatting": "..." of null, "search_query": "..." of null, "scope": "in_scope" of "off_topic", "bot_message": "...", "suggestions": ["...", "..."] of null}}
+
+Als de vraag ONDUIDELIJK of te vaag is, geef dan in "suggestions" 2-3 specifiekere voorbeeldvragen passend bij het onderwerp. De suggesties worden als klikbare knoppen getoond. Zet suggestions op null als de vraag duidelijk genoeg is.
 
 TOON: {tone}. STIJL: {style}""",
 
@@ -201,16 +203,9 @@ async def bekendheid_node(state: dict) -> dict:
     if result.get("scope") == "off_topic":
         return {**state, "gegevens": gegevens, "bot_message": result.get("bot_message", ""), "off_topic": True}
 
+    # Only extract ai_bekendheid — other fields are collected in later steps
     if result.get("ai_bekendheid"):
         gegevens["ai_bekendheid"] = _normalize_bekendheid(result["ai_bekendheid"]) or gegevens.get("ai_bekendheid")
-    if result.get("gebruiker_type"):
-        gegevens["gebruiker_type"] = _normalize_type(result["gebruiker_type"]) or gegevens.get("gebruiker_type")
-    if result.get("vraag_tekst"):
-        gegevens["vraag_tekst"] = result["vraag_tekst"]
-    if result.get("kankersoort") and result["kankersoort"] not in ("geen", "null", ""):
-        gegevens["kankersoort"] = result["kankersoort"]
-    if result.get("vraag_type"):
-        gegevens["vraag_type"] = result["vraag_type"]
 
     return {**state, "gegevens": gegevens, "bot_message": result.get("bot_message", ""), "off_topic": False}
 
@@ -228,16 +223,12 @@ async def rol_node(state: dict) -> dict:
     if result.get("scope") == "off_topic":
         return {**state, "gegevens": g, "bot_message": result.get("bot_message", ""), "off_topic": True}
 
+    # Only extract gebruiker_type — vraag_tekst is collected in the next step
     if result.get("gebruiker_type"):
         g["gebruiker_type"] = _normalize_type(result["gebruiker_type"]) or g.get("gebruiker_type")
-    if result.get("vraag_tekst"):
-        g["vraag_tekst"] = result["vraag_tekst"]
-    if result.get("kankersoort") and result["kankersoort"] not in ("geen", "null", ""):
-        g["kankersoort"] = result["kankersoort"]
-    if result.get("vraag_type"):
-        g["vraag_type"] = result["vraag_type"]
 
-    return {**state, "gegevens": g, "bot_message": result.get("bot_message", ""), "off_topic": False}
+    suggestions = result.get("suggestions")
+    return {**state, "gegevens": g, "bot_message": result.get("bot_message", ""), "off_topic": False, "suggestions": suggestions}
 
 
 async def vraag_node(state: dict) -> dict:
@@ -274,7 +265,8 @@ async def vraag_node(state: dict) -> dict:
     elif g.get("vraag_tekst"):
         g["search_query"] = g["vraag_tekst"]
 
-    return {**state, "gegevens": g, "bot_message": result.get("bot_message", ""), "off_topic": False}
+    suggestions = result.get("suggestions")
+    return {**state, "gegevens": g, "bot_message": result.get("bot_message", ""), "off_topic": False, "suggestions": suggestions}
 
 
 async def confirm_node(state: dict) -> dict:
@@ -389,8 +381,12 @@ async def run_intake_step(
     else:
         status = "need_more_info"
 
-    return {
+    suggestions = result.get("suggestions")
+    resp: dict = {
         "gegevens": g,
         "bot_message": result.get("bot_message", ""),
         "status": status,
     }
+    if suggestions:
+        resp["suggestions"] = suggestions
+    return resp

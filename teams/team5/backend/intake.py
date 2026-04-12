@@ -340,7 +340,8 @@ async def search_and_format(
                 elif connector_name in ("nkr_cijfers", "cancer_atlas"):
                     query_params["cancer_type"] = kanker_filter
             if connector_name == "nkr_cijfers":
-                query_params.setdefault("cancer_type", vraag_tekst)
+                if "cancer_type" not in query_params:
+                    continue  # skip NKR when no cancer type was extracted
                 query_params["period"] = "2018-2022"
 
             result = await connector.query(**query_params)

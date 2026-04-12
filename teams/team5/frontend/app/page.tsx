@@ -57,6 +57,7 @@ export default function ChatPage() {
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [flowState, setFlowState] = useState<FlowState>("CHAT");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState("pending");
 
   useEffect(() => {
@@ -133,12 +134,17 @@ export default function ChatPage() {
 
     addUserMessage(msg);
     setInputText("");
+    setSuggestions([]);
     setIsLoading(true);
 
     try {
       const result = await analyzeMessage(msg, gegevens, currentSessionId);
       setGegevens(result.gegevens);
       addBotMessage(result.bot_message);
+
+      if (result.suggestions?.length) {
+        setSuggestions(result.suggestions);
+      }
 
       if (result.status === "ready_to_search") {
         await doSearch(result.gegevens);
@@ -262,9 +268,9 @@ export default function ChatPage() {
     setFlowState("CHAT");
   };
 
-  const handleMoreInfo = () => {
+  const handleMoreInfo = async () => {
     addBotMessage("Ik zoek aanvullende informatie...");
-    doSearch(gegevens);
+    await doSearch(gegevens);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -385,6 +391,18 @@ export default function ChatPage() {
                   onSelect={(v) => handleSend(v)}
                   columns={currentStep === "ROL" ? 2 : 1}
                 />
+              </div>
+            )}
+
+            {/* Dynamic suggestion buttons from the bot */}
+            {suggestions.length > 0 && !isLoading && currentStep === "VRAAG" && (
+              <div className="ml-10 space-y-2">
+                <IntakeButtons
+                  options={suggestions.map((s) => ({ value: s, label: s }))}
+                  onSelect={(v) => handleSend(v)}
+                  columns={1}
+                />
+                <p className="text-xs text-gray-400 mt-1">Of typ hieronder uw eigen vraag</p>
               </div>
             )}
 

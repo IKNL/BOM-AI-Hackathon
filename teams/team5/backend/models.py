@@ -121,7 +121,8 @@ class IntakeAnalyzeResponse(BaseModel):
     """Response from /api/intake/analyze."""
     gegevens: GegevensModel
     bot_message: str
-    status: Literal["need_more_info", "ready_to_search", "unclear"]
+    status: Literal["need_more_info", "ready_to_search", "unclear", "confirm_needed", "off_topic"]
+    suggestions: list[str] | None = None
 
 
 class IntakeSearchRequest(BaseModel):

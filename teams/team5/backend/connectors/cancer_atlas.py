@@ -241,6 +241,10 @@ async def get_regional_cancer_data(
         url = f"{ATLAS_BASE_URL}/data/{group_id}/pc3"
         params: dict[str, Any] = {"sex": sex_code}
 
+        if connector._client is None:
+            return SourceResult(
+                data=[], summary="Cancer Atlas connector niet geïnitialiseerd.", sources=[], visualizable=False,
+            )
         response = await connector._client.get(url, params=params)
         response.raise_for_status()
         all_areas: list[dict[str, Any]] = response.json()
@@ -321,7 +325,7 @@ def _build_postcode_result(
         f"Postcodegebied {postcode} - {cancer_type}: "
         f"SIR = {sir:.2f} ({comparison} het landelijk gemiddelde). "
         f"Betrouwbaarheid: {area.get('credibility', 'onbekend')}. "
-        f"Bereik (p10-p90): {area.get('p10', '?'):.2f} - {area.get('p90', '?'):.2f}."
+        f"Bereik (p10-p90): {f'{area[\"p10\"]:.2f}' if area.get('p10') is not None else '?'} - {f'{area[\"p90\"]:.2f}' if area.get('p90') is not None else '?'}."
     )
 
     return SourceResult(
