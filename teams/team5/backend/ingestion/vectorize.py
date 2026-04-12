@@ -241,7 +241,7 @@ def ingest_kanker_nl(client: chromadb.ClientAPI, ef):
 
     for url, page in pages.items():
         text = page.get("text", "")
-        if not text.strip() or "Error 503" in text[:200]:
+        if not text.strip() or "Error 503" in text[:200] or "pagina die je zocht is helaas niet beschikbaar" in text[:400]:
             skipped += 1
             continue
 

@@ -29,7 +29,7 @@ def mock_collection():
                 {
                     "kankersoort": "borstkanker",
                     "section": "behandelingen",
-                    "url": "https://www.kanker.nl/kankersoorten/borstkanker/behandelingen/behandeling-borstkanker",
+                    "url": "https://www.kanker.nl/kankersoorten/borstkanker/behandelingen/behandeling-van-borstkanker",
                     "title": "Behandeling borstkanker",
                 },
             ]

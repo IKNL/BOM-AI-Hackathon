@@ -137,6 +137,11 @@ def build_sitemap() -> list[dict]:
             skipped_errors += 1
             continue
 
+        # Skip soft-404 pages (kanker.nl returns 200 with this message)
+        if "pagina die je zocht is helaas niet beschikbaar" in text[:400]:
+            skipped_errors += 1
+            continue
+
         # Skip very short pages (likely broken)
         if len(text.strip()) < 30:
             skipped_errors += 1
