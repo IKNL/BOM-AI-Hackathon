@@ -9,7 +9,7 @@ from pathlib import Path
 import chromadb
 
 from connectors.embeddings import get_embedding_function
-from tests.ab_chunking.chunkers import KANKER_NL_CHUNKERS, PUBLICATION_CHUNKERS
+from tests.ab_chunking.chunkers import KANKER_NL_CHUNKERS, KANKER_NL_CHUNKERS_DRILLDOWN, PUBLICATION_CHUNKERS
 from tests.ab_chunking.judge import judge_batch
 from tests.ab_chunking.metrics import (
     recall_at_k,
@@ -201,11 +201,16 @@ async def run_kanker_nl_test(variant_name: str, chunker_fn, n_results: int = 5) 
     }
 
 
-async def run_all_kanker_nl() -> list[dict]:
-    """Run all kanker.nl variants and return results."""
+async def run_all_kanker_nl(drilldown: bool = False) -> list[dict]:
+    """Run all kanker.nl variants and return results.
+
+    If drilldown=True, runs the chunk-size sub-variants instead of the main variants.
+    """
+    chunkers = KANKER_NL_CHUNKERS_DRILLDOWN if drilldown else KANKER_NL_CHUNKERS
+    label = "drilldown" if drilldown else "main"
     results = []
-    for name, fn in KANKER_NL_CHUNKERS.items():
-        logger.info("Running kanker.nl variant: %s", name)
+    for name, fn in chunkers.items():
+        logger.info("Running kanker.nl %s variant: %s", label, name)
         result = await run_kanker_nl_test(name, fn)
         results.append(result)
         logger.info("  %s: R@5=%.3f P@5=%.3f MRR=%.3f (%d chunks)",

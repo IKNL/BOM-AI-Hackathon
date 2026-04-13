@@ -193,6 +193,14 @@ KANKER_NL_CHUNKERS = {
     "E_hybrid": lambda text: chunk_hybrid(text, is_markdown=False),
 }
 
+# Drill-down sub-variants for chunk size optimization (B as new baseline)
+KANKER_NL_CHUNKERS_DRILLDOWN = {
+    "B300_baseline": lambda text: chunk_sentence_aware(text, max_words=300, is_markdown=False),
+    "B150_small": lambda text: chunk_sentence_aware(text, max_words=150, overlap_words=30, is_markdown=False),
+    "B200_medium": lambda text: chunk_sentence_aware(text, max_words=200, overlap_words=40, is_markdown=False),
+    "B250_large": lambda text: chunk_sentence_aware(text, max_words=250, overlap_words=45, is_markdown=False),
+}
+
 PUBLICATION_CHUNKERS = {
     "A_baseline": lambda text: chunk_baseline(text, is_markdown=True),
     "B_section": lambda text: chunk_paragraph(text, max_words=2000, is_markdown=True),
